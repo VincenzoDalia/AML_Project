@@ -1,4 +1,4 @@
-# Prova commit da Colab
+# Prova commit da Colab senza user
 
 import torch
 import torch.nn as nn
