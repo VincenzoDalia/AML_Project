@@ -1,5 +1,4 @@
-# Prova commit da Colab senza user
-###
+# Prova commit da Colab da Pippo
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
