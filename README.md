@@ -1,5 +1,5 @@
 # AML 2023/2024 Project - Activation Shaping for Domain Adaptation
-Official repository for the "Activation Shaping for Domain Adaptation" project - Advanced Machine Learning Course 2023/2024 @ PoliTo
+"Activation Shaping for Domain Adaptation" project - Advanced Machine Learning Course 2023/2024 @ PoliTo - Vincenzo Dalia, Mario Todaro, Fabio Barbieri
 
 ## Getting Started
 Make sure to have a CUDA capable device, supporting at least CUDA 11.4, installed and correctly configured on your system. 
