@@ -106,7 +106,8 @@ def main():
     if CONFIG.experiment in ['baseline']:
         model = BaseResNet18()
         
-        model.resnet.register_forward_hook(model.activation_shaping_hook)
+        h1 = model.resnet.register_forward_hook(model.activation_shaping_hook)
+        h1.remove()
 
     ######################################################
     #elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
