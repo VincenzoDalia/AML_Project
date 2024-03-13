@@ -49,7 +49,7 @@ class BaseResNet18(nn.Module):
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
 
         # Create an empty list to store registered hooks (optional for clarity)
-        #self.registered_hooks = []
+        self.registered_hooks = []
 
     def forward(self, x):
         return self.resnet(x)
