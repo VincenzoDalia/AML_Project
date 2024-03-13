@@ -15,10 +15,10 @@ class BaseResNet18(nn.Module):
 
     def activation_shaping_hook(self, module, input, output):
         
-            M = torch.randn(output.shape)
+            M = torch.randn(output.shape).cuda()
             
             # Binarize both A and M using threshold=0 for clarity
-            A_binary = (output > 0).float()
+            A_binary = (output > 0).float().cuda()
             M_binary = (M > 0).float()
 
             # Element-wise product for activation shaping
