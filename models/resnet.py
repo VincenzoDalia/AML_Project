@@ -13,7 +13,7 @@ class BaseResNet18(nn.Module):
     
 
 
-    def activation_shaping_hook(module, input, output):
+    def activation_shaping_hook(self, module, input, output):
             
         print("Activation Shaping Hook")
             
