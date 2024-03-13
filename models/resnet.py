@@ -17,13 +17,15 @@ class BaseResNet18(nn.Module):
         
             M = torch.randn(output.shape).cuda()
             M = torch.Tensor(M.data)
-            M.requires_grad = True
-            output.requires_grad = True
+            
             
             # Binarize both A and M using threshold=0 for clarity
             A_binary = (output > 0).float().cuda()
             M_binary = (M > 0).float()
 
+            A_binary.requires_grad = True
+            M_binary.requires_grad = True
+            
             # Element-wise product for activation shaping
             shaped_output = A_binary * M_binary
             
