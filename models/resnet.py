@@ -54,7 +54,7 @@ class BaseResNet18(nn.Module):
     def forward(self, x):
         return self.resnet(x)
 
-    def register_activation_shaping_hook(self, module, every_nth=1):
+    def register_activation_shaping_hook(self, module, every_nth=3):
         """
         Registers the activation shaping hook to a specific module.
 
@@ -65,10 +65,8 @@ class BaseResNet18(nn.Module):
         """
 
         def activation_shaping_hook(module, input, output):
-            
-            print("activation_shaping_hook")
          
-            """ M = torch.randn(output.shape)
+            M = torch.randn(output.shape)
             
             # Binarize both A and M using threshold=0 for clarity
             A_binary = (output > 0).float()
@@ -78,7 +76,7 @@ class BaseResNet18(nn.Module):
             shaped_output = A_binary * M_binary
 
             # Replace the original output with the shaped output
-            module.out_func = lambda input, output: shaped_output """
+            module.out_func = lambda input, output: shaped_output
 
         # Handle applying the hook every nth convolution if specified
         if isinstance(module, nn.Conv2d):
@@ -94,13 +92,12 @@ class BaseResNet18(nn.Module):
                         activation_shaping_hook(module, input, output)
                     return output
                 handle = module.register_forward_hook(wrapper)
-                self.registered_hooks.append(handle)  # Optional for clarity 
+                self.registered_hooks.append(handle)  # Optional for clarity
 
-    """  
-   def remove_activation_shaping_hooks(self):
-        
-        #Removes all registered activation shaping hooks.
-        
+    def remove_activation_shaping_hooks(self):
+        """
+        Removes all registered activation shaping hooks.
+        """
         for handle in self.registered_hooks:
             handle.remove()
-        self.registered_hooks = [] """
+        self.registered_hooks = []
