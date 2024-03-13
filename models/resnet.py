@@ -1,3 +1,4 @@
+from tkinter import Variable
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
@@ -16,6 +17,7 @@ class BaseResNet18(nn.Module):
     def activation_shaping_hook(self, module, input, output):
         
             M = torch.randn(output.shape).cuda()
+            M = Variable(M.data, requires_grad=True)
             
             # Binarize both A and M using threshold=0 for clarity
             A_binary = (output > 0).float().cuda()
