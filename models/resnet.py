@@ -16,7 +16,8 @@ class BaseResNet18(nn.Module):
     def activation_shaping_hook(self, module, input, output):
         
             M = torch.randn(output.shape).cuda()
-            M = torch.Tensor(M.data, requires_grad=True)
+            M = torch.Tensor(M.data)
+            M.requires_grad = True
             
             # Binarize both A and M using threshold=0 for clarity
             A_binary = (output > 0).float().cuda()
