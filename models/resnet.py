@@ -7,29 +7,35 @@ class BaseResNet18(nn.Module):
         super(BaseResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
+        self.counter = 0
 
     def forward(self, x):
         return self.resnet(x)
-    
 
 
     def activation_shaping_hook(self, module, input, output):
         
+        # Increment counter
+        self.counter += 1
+        
+        # Apply activation shaping every 3 forward passes
+        
+        if self.counter % 3 == 0:
+        
             M = torch.randn(output.shape).cuda()
             M = torch.Tensor(M.data)
-            #M.requires_grad = True
-            #output = output.detach().clone()
-            #output.requires_grad = True
             
             # Binarize both A and M using threshold=0 for clarity
             A_binary = (output > 0).float().cuda()
             M_binary = (M > 0).float()
             
-            
             # Element-wise product for activation shaping
             shaped_output = A_binary * M_binary
             
             return shaped_output
+        
+        else:
+            return output
 
             
 
