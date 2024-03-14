@@ -21,6 +21,8 @@ class BaseResNet18(nn.Module):
         # Apply activation shaping every 3 forward passes
         
         if self.counter % 3 == 0:
+            
+            print("Activation Shaping applied")
         
             M = torch.randn(output.shape).cuda()
             M = torch.Tensor(M.data)
