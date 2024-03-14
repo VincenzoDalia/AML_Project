@@ -15,6 +15,10 @@ class BaseResNet18(nn.Module):
 
     def activation_shaping_hook(self, module, input, output):
         
+        print("Activation Shaping applied")
+
+        
+        """  
         # Increment counter
         self.counter += 1
         
@@ -37,7 +41,7 @@ class BaseResNet18(nn.Module):
             return shaped_output
         
         else:
-            return output
+            return output """
 
             
 
