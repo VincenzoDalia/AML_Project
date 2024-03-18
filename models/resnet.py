@@ -22,12 +22,20 @@ class ASHResNet18(nn.Module):
         return self.resnet(x)
     
     # WIP: custom hook, takes M as param so it can be used both for Point 2 and 3
-    def shape_activations(M):
+    def shape_activations():
     # the hook signature
       def hook(model, input, output):
-        # Binarize A and M
-        # return element-wise product A * M
         print("activation shapes")
+        M = torch.randn(output.shape).cuda()
+        M = torch.Tensor(M.data)
+            
+        # Binarize both A and M using threshold=0 for clarity
+        A_binary = (output > 0).float().cuda()
+        M_binary = (M > 0).float()
+            
+        # Element-wise product for activation shaping
+        shaped_output = A_binary * M_binary
+        return shaped_output
       return hook
 
 

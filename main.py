@@ -70,16 +70,16 @@ def train(model, data):
                     loss = F.cross_entropy(model(x), y)
                 
                 # WIP
-                if CONFIG.experiment in ['random_maps']:
+                elif CONFIG.experiment in ['random_maps']:
                     x, y = batch
                     x, y = x.to(CONFIG.device), y.to(CONFIG.device)
-                    
-                    # random_M = random map
-                    # XXX := a layer after wich to apply the hook 
-                    # model.XXX.register_forward_hook(model.shape_activations(random_M)
+
+                    hook = model.register_forward_hook(model.shape_activations)
 
                     loss = F.cross_entropy(model(x), y)
-                    # xxx.remove()
+                    
+                    hook.remove()
+                
 
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
