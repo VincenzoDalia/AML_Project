@@ -14,6 +14,7 @@ from parse_args import parse_arguments
 
 from dataset import PACS
 from models.resnet import BaseResNet18
+from models.resnet import ASHResNet18
 
 from globals import CONFIG
 
@@ -67,10 +68,22 @@ def train(model, data):
                     x, y = batch
                     x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                     loss = F.cross_entropy(model(x), y)
+                
+                # WIP
+                if CONFIG.experiment in ['random_maps']:
+                    x, y = batch
+                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
+                    
+                    # random_M = random map
+                    # XXX := a layer after wich to apply the hook 
+                    # model.XXX.register_forward_hook(model.shape_activations(random_M)
+
+                    loss = F.cross_entropy(model(x), y)
+                    # xxx.remove()
 
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
-
+                    # Register hook
                 ######################################################
 
             # Optimization step
@@ -103,12 +116,14 @@ def main():
     data = PACS.load_data()
 
     # Load model
+    # WIP
     if CONFIG.experiment in ['baseline']:
         model = BaseResNet18()
+    elif CONFIG.experiment in ['random_maps', 'domain_adapt']:
+        model = ASHResNet18()
 
     ######################################################
     #elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
-
     ######################################################
     
     model.to(CONFIG.device)
