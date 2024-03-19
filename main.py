@@ -18,6 +18,19 @@ from models.resnet import ASHResNet18
 
 from globals import CONFIG
 
+def register_hooks(model):
+  resnet = model.resnet
+  h1 = resnet.layer3[0].conv2.register_forward_hook(model.random_shape_activations)
+  h2 = resnet.layer3[1].conv2.register_forward_hook(model.random_shape_activations)
+  h3 = resnet.layer4[0].conv2.register_forward_hook(model.random_shape_activations)
+  h4 = resnet.layer4[1].conv2.register_forward_hook(model.random_shape_activations)
+  return [h1,h2,h3,h4]
+
+
+def remove_hooks(hooks):
+  for h in hooks:
+    h.remove()
+
 @torch.no_grad()
 def evaluate(model, data):
     model.eval()
@@ -55,6 +68,9 @@ def train(model, data):
         scheduler.load_state_dict(checkpoint['scheduler'])
         model.load_state_dict(checkpoint['model'])
     
+    if CONFIG.experiment in ['random_maps']:
+      hooks = register_hooks(model)
+
     # Optimization loop
     for epoch in range(cur_epoch, CONFIG.epochs):
         model.train()
@@ -64,31 +80,18 @@ def train(model, data):
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
 
-                if CONFIG.experiment in ['baseline']:
+                if CONFIG.experiment in ['baseline', 'random_maps']:
                     x, y = batch
                     x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                     loss = F.cross_entropy(model(x), y)
                 
-                # WIP
-                elif CONFIG.experiment in ['random_maps']:
-                    x, y = batch
-                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
-
-                    hook = model.register_forward_hook(model.shape_activations)
-
-                    loss = F.cross_entropy(model(x), y)
-                    
-                    hook.remove()
-                
-
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
-                    # Register hook
                 ######################################################
 
             # Optimization step
             scaler.scale(loss / CONFIG.grad_accum_steps).backward()
-
+            
             if ((batch_idx + 1) % CONFIG.grad_accum_steps == 0) or (batch_idx + 1 == len(data['train'])):
                 scaler.step(optimizer)
                 optimizer.zero_grad(set_to_none=True)
@@ -108,7 +111,8 @@ def train(model, data):
             'model': model.state_dict()
         }
         torch.save(checkpoint, os.path.join('record', CONFIG.experiment_name, 'last.pth'))
-
+      
+    remove_hooks(hooks)
 
 def main():
     
