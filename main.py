@@ -18,19 +18,6 @@ from models.resnet import ASHResNet18
 
 from globals import CONFIG
 
-def register_hooks(model):
-  resnet = model.resnet
-  h1 = resnet.layer3[0].conv2.register_forward_hook(model.random_shape_activations)
-  h2 = resnet.layer3[1].conv2.register_forward_hook(model.random_shape_activations)
-  h3 = resnet.layer4[0].conv2.register_forward_hook(model.random_shape_activations)
-  h4 = resnet.layer4[1].conv2.register_forward_hook(model.random_shape_activations)
-  return [h1,h2,h3,h4]
-
-
-def remove_hooks(hooks):
-  for h in hooks:
-    h.remove()
-
 @torch.no_grad()
 def evaluate(model, data):
     model.eval()
@@ -69,7 +56,7 @@ def train(model, data):
         model.load_state_dict(checkpoint['model'])
     
     if CONFIG.experiment in ['random_maps']:
-      hooks = register_hooks(model)
+      hooks = model.register_hooks()
 
     # Optimization loop
     for epoch in range(cur_epoch, CONFIG.epochs):
@@ -112,7 +99,7 @@ def train(model, data):
         }
         torch.save(checkpoint, os.path.join('record', CONFIG.experiment_name, 'last.pth'))
       
-    remove_hooks(hooks)
+    model.remove_hooks()
 
 def main():
     

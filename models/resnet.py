@@ -34,6 +34,18 @@ class ASHResNet18(nn.Module):
       shaped_output = A_binary * M_binary
       return shaped_output
 
+    def register_hooks(self):
+      resnet = self.resnet
+      h1 = resnet.layer3[1].conv1.register_forward_hook(self.random_shape_activations)
+      h2 = resnet.layer3[1].conv2.register_forward_hook(self.random_shape_activations)
+      h3 = resnet.layer4[1].conv1.register_forward_hook(self.random_shape_activations)
+      h4 = resnet.layer4[1].conv2.register_forward_hook(self.random_shape_activations)
+      return [h1,h2,h3,h4]
+
+
+    def remove_hooks(self, hooks):
+      for h in hooks:
+        h.remove()
 
 
 
