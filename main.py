@@ -99,7 +99,7 @@ def train(model, data):
         }
         torch.save(checkpoint, os.path.join('record', CONFIG.experiment_name, 'last.pth'))
       
-    model.remove_hooks()
+    model.remove_hooks(hooks)
 
 def main():
     
