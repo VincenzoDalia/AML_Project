@@ -54,9 +54,6 @@ def train(model, data):
         optimizer.load_state_dict(checkpoint['optimizer'])
         scheduler.load_state_dict(checkpoint['scheduler'])
         model.load_state_dict(checkpoint['model'])
-    
-    if CONFIG.experiment in ['random_maps']:
-      hooks = model.register_hooks()
 
     # Optimization loop
     for epoch in range(cur_epoch, CONFIG.epochs):
@@ -66,12 +63,18 @@ def train(model, data):
             
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-
-                if CONFIG.experiment in ['baseline', 'random_maps']:
-                    x, y = batch
-                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
-                    loss = F.cross_entropy(model(x), y)
+                x, y = batch
+                x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                 
+                if CONFIG.experiment in ['baseline']:
+                  loss = F.cross_entropy(model(x), y)
+                elif CONFIG.experiment in ['random_maps']:
+                  # Tweak this ratio
+                  mask_ratio = 1
+                  model.register_random_shaping_hooks(mask_ratio)
+                  loss = F.cross_entropy(model(x), y)
+                  model.remove_hooks()
+
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
                 ######################################################
@@ -98,8 +101,6 @@ def train(model, data):
             'model': model.state_dict()
         }
         torch.save(checkpoint, os.path.join('record', CONFIG.experiment_name, 'last.pth'))
-      
-    model.remove_hooks(hooks)
 
 def main():
     
