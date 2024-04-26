@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
 
+
 class BaseResNet18(nn.Module):
     def __init__(self):
         super(BaseResNet18, self).__init__()
@@ -13,55 +14,59 @@ class BaseResNet18(nn.Module):
         return self.resnet(x)
 
 
-    def activation_shaping_hook(self, module, input, output):
-        
-        print("Activation Shaping applied")
+# Modifies 'BaseResNet18' including the Activation Shaping Module
+class ASHResNet18(nn.Module):
+    def __init__(self):
+        super(ASHResNet18, self).__init__()
+        self.resnet = resnet18(weights=ResNet18_Weights)
+        self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
+        self.hooks = []
 
-        
-        """  
-        # Increment counter
-        self.counter += 1
-        
-        # Apply activation shaping every 3 forward passes
-        
-        if self.counter % 3 == 0:
-            
-            print("Activation Shaping applied")
-        
-            M = torch.randn(output.shape).cuda()
-            M = torch.Tensor(M.data)
-            
-            # Binarize both A and M using threshold=0 for clarity
-            A_binary = (output > 0).float().cuda()
-            M_binary = (M > 0).float()
-            
-            # Element-wise product for activation shaping
-            shaped_output = A_binary * M_binary
-            
-            return shaped_output
-        
-        else:
-            return output """
+    def forward(self, x):
+        return self.resnet(x)
 
-            
+    # Generic module that performs activation shaping
+    def shape_activation(self, layer_activation, M):
+        # Binarize both A and M
+        A_binary = (layer_activation > 0).float()
 
-######################################################
-# TODO: either define the Activation Shaping Module as a nn.Module
-#class ActivationShapingModule(nn.Module):
-#...
-#
-# OR as a function that shall be hooked via 'register_forward_hook'
-#def activation_shaping_hook(module, input, output):
-#...
-#
-######################################################
-# TODO: modify 'BaseResNet18' including the Activation Shaping Module
-#class ASHResNet18(nn.Module):
-#    def __init__(self):
-#        super(ASHResNet18, self).__init__()
-#        ...
-#    
-#    def forward(self, x):
-#        ...
-#
-######################################################
+        # consider removing M binarization here
+        # random_shaping_hook can binarize instead for point 2
+        # ext 2 requires retaining M as it is
+        M_binary = (M > 0).float()
+
+        # Element-wise product for activation shaping
+        return A_binary * M_binary
+
+    def random_shape_activations(self, mask_ratio):
+        def hook(model, input, output):
+            num_elements = output.numel()
+            num_ones = int(num_elements * mask_ratio)
+            # Create a binary tensor with the appropriate number of ones
+            random_indices = torch.randperm(num_elements)[:num_ones]
+            M_binary = torch.zeros(num_elements, device=output.device)
+            M_binary[random_indices] = 1
+
+            # Reshape the tensor to match the output shape
+            M_binary = M_binary.view(output.shape)
+
+            return self.shape_activation(output, M_binary)
+
+        return hook
+
+    # TODO: domain_adapt_activations():
+
+    def register_random_shaping_hooks(self, mask_ratio):
+        random_maps_hook = self.random_shape_activations(mask_ratio)
+
+        h2 = self.resnet.layer2[1].conv2.register_forward_hook(random_maps_hook)
+        # h3 = self.resnet.layer3[0].conv2.register_forward_hook(random_maps_hook)
+
+        # self.hooks.append(h3)
+        self.hooks.append(h2)
+
+    # TODO: register_domain_adapt_hooks()
+
+    def remove_hooks(self):
+        for h in self.hooks:
+            h.remove()

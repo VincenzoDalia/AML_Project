@@ -14,6 +14,7 @@ from parse_args import parse_arguments
 
 from dataset import PACS
 from models.resnet import BaseResNet18
+from models.resnet import ASHResNet18
 
 from globals import CONFIG
 
@@ -53,7 +54,7 @@ def train(model, data):
         optimizer.load_state_dict(checkpoint['optimizer'])
         scheduler.load_state_dict(checkpoint['scheduler'])
         model.load_state_dict(checkpoint['model'])
-    
+
     # Optimization loop
     for epoch in range(cur_epoch, CONFIG.epochs):
         model.train()
@@ -62,20 +63,25 @@ def train(model, data):
             
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-
+                x, y = batch
+                x, y = x.to(CONFIG.device), y.to(CONFIG.device)
+                
                 if CONFIG.experiment in ['baseline']:
-                    x, y = batch
-                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
-                    loss = F.cross_entropy(model(x), y)
+                  loss = F.cross_entropy(model(x), y)
+                elif CONFIG.experiment in ['random_maps']:
+                  # Tweak this ratio
+                  mask_ratio = 1
+                  model.register_random_shaping_hooks(mask_ratio)
+                  loss = F.cross_entropy(model(x), y)
+                  model.remove_hooks()
 
                 ######################################################
                 #elif... TODO: Add here train logic for the other experiments
-
                 ######################################################
 
             # Optimization step
             scaler.scale(loss / CONFIG.grad_accum_steps).backward()
-
+            
             if ((batch_idx + 1) % CONFIG.grad_accum_steps == 0) or (batch_idx + 1 == len(data['train'])):
                 scaler.step(optimizer)
                 optimizer.zero_grad(set_to_none=True)
@@ -96,23 +102,19 @@ def train(model, data):
         }
         torch.save(checkpoint, os.path.join('record', CONFIG.experiment_name, 'last.pth'))
 
-
 def main():
     
     # Load dataset
     data = PACS.load_data()
 
     # Load model
+    # WIP
     if CONFIG.experiment in ['baseline']:
         model = BaseResNet18()
-        
-        h1 = model.resnet.register_forward_hook(model.activation_shaping_hook)
-        h1.remove()
-
+    elif CONFIG.experiment in ['random_maps', 'domain_adapt']:
+        model = ASHResNet18()
     ######################################################
     #elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
-        
-
     ######################################################
     
     model.to(CONFIG.device)
