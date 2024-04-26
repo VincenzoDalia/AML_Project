@@ -113,7 +113,6 @@ def main():
         model = BaseResNet18()
     elif CONFIG.experiment in ['random_maps', 'domain_adapt']:
         model = ASHResNet18()
-
     ######################################################
     #elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
     ######################################################
