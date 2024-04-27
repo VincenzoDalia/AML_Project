@@ -96,7 +96,7 @@ class DomAdaptResNet18(nn.Module):
                 
     #To append the activation maps to the list       
     def save_maps(self, module, input, output):
-        self.activation_maps.append(output)
+        self.activation_maps.append(output.clone().detach())
         
     #To do the activation shaping
     def activation_shaping(self, model, input, output):
@@ -107,14 +107,11 @@ class DomAdaptResNet18(nn.Module):
     
     #To register the activation shaping hooks
     def register_shaping_hooks(self):
+       
+        for name, module in self.resnet.named_modules():
+            if isinstance(module, nn.Conv2d) and name in self.active_layers:
+                self.hooks_activation_shaping.append(module.register_forward_hook(self.activation_shaping))
         
-        h2 = self.resnet.layer2[1].conv2.register_forward_hook(self.activation_shaping)
-        # h3 = self.resnet.layer3[0].conv2.register_forward_hook(random_maps_hook)
-
-        # self.hooks.append(h3)
-        self.hooks_activation_shaping.append(h2)
-        
-
         
     def forward(self, x):
         return self.resnet(x)
