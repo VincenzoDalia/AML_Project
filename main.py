@@ -15,6 +15,7 @@ from parse_args import parse_arguments
 from dataset import PACS
 from models.resnet import BaseResNet18
 from models.resnet import ASHResNet18
+from models.resnet import DomAdaptResNet18
 
 from globals import CONFIG
 
@@ -141,6 +142,8 @@ def main():
         model = BaseResNet18()
     elif CONFIG.experiment in ['random_maps', 'domain_adapt']:
         model = ASHResNet18()
+    elif CONFIG.experiment in ['domain_adapt']:
+        model = DomAdaptResNet18()
     ######################################################
     #elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
     ######################################################
