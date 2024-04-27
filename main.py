@@ -140,7 +140,7 @@ def main():
     # WIP
     if CONFIG.experiment in ['baseline']:
         model = BaseResNet18()
-    elif CONFIG.experiment in ['random_maps', 'domain_adapt']:
+    elif CONFIG.experiment in ['random_maps']:
         model = ASHResNet18()
     elif CONFIG.experiment in ['domain_adapt']:
         model = DomAdaptResNet18()
