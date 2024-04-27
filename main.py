@@ -78,7 +78,7 @@ def train(model, data):
                     # We only use it to compute the activation maps for the target domain
                     with torch.no_grad():
                         model(targ_x)
-                    model.remove_hooks_domain_adapt()
+                    model.remove_hooks_activation_maps()
                     model.train()
             
             # Compute loss
