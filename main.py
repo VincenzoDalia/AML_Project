@@ -83,8 +83,6 @@ def train(model, data):
             
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-                x, y = batch
-                x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                 
                 if CONFIG.experiment in ['baseline']:
                     x, y = batch
