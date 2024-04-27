@@ -55,7 +55,6 @@ class ASHResNet18(nn.Module):
         return hook
 
     # TODO: domain_adapt_activations():
-    ### TEST 
 
     def register_random_shaping_hooks(self, mask_ratio):
         random_maps_hook = self.random_shape_activations(mask_ratio)
