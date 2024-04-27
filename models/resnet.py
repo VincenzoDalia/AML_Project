@@ -99,9 +99,9 @@ class DomAdaptResNet18(nn.Module):
         self.activation_maps.append(output)
         
     #To do the activation shaping
-    def activation_shaping(self, layer_activation):
+    def activation_shaping(self, model, input, output):
         M = self.activation_maps.pop(0)
-        A_binary = (layer_activation > 0).float()
+        A_binary = (output > 0).float()
         M_binary = (M > 0).float()
         return A_binary * M_binary
     
