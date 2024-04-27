@@ -70,3 +70,61 @@ class ASHResNet18(nn.Module):
     def remove_hooks(self):
         for h in self.hooks:
             h.remove()
+
+
+# Modifies 'BaseResNet18' including the Domain Adaptation Module
+# TODO: Implement Domain Adaptation Module
+class DomAdaptResNet18(nn.Module):
+    def __init__(self):
+        super(DomAdaptResNet18, self).__init__()
+        self.resnet = resnet18(weights=ResNet18_Weights)
+        self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
+        
+        self.hooks_activation_maps = []
+        self.hooks_activation_shaping = []
+        self.activation_maps = []
+        
+        #List of layers to be activated
+        self.active_layers = ['layer2.1.conv2']
+        
+    
+    #To save the activation maps
+    def register_domain_adapt_hooks(self):
+        for name, module in self.resnet.named_modules():
+            if isinstance(module, nn.Conv2d) and name in self.active_layers:
+                self.hooks_activation_maps.append(module.register_forward_hook(self.save_activation_map))
+                
+    #To append the activation maps to the list       
+    def save_activation_map(self, module, input, output):
+        self.activation_maps.append(output)
+        
+    #To do the activation shaping
+    def activation_shaping(self, layer_activation):
+        M = self.activation_maps.pop(0)
+        A_binary = (layer_activation > 0).float()
+        M_binary = (M > 0).float()
+        return A_binary * M_binary
+    
+    #To register the activation shaping hooks
+    def register_activation_shaping_hooks(self):
+        
+        h2 = self.resnet.layer2[1].conv2.register_forward_hook(self.activation_shaping)
+        # h3 = self.resnet.layer3[0].conv2.register_forward_hook(random_maps_hook)
+
+        # self.hooks.append(h3)
+        self.hooks_activation_shaping.append(h2)
+        
+
+        
+    def forward(self, x):
+        return self.resnet(x)
+    
+    
+    def remove_hooks_activation_maps(self):
+        for h in self.hooks_activation_maps:
+            h.remove()
+     
+    def remove_hooks_activation_shaping(self):
+        for h in self.hooks_activation_shaping:
+            h.remove()
+    
