@@ -21,22 +21,32 @@ class ASHResNet18(nn.Module):
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         self.hooks = []
+        
+        self.binary = True
 
     def forward(self, x):
         return self.resnet(x)
 
     # Generic module that performs activation shaping
     def shape_activation(self, layer_activation, M):
-        # Binarize both A and M
+        
+        
         A_binary = (layer_activation > 0).float()
+        
+        if self.binary:
+            M_binary = (M > 0).float()
+            
+            # Element-wise product for activation shaping
+            return A_binary * M_binary
+        
+        else:
+            
+            # Extension 2 (Binarization Ablation)
+            return A_binary * M
+    
+        
 
-        # consider removing M binarization here
-        # random_shaping_hook can binarize instead for point 2
-        # ext 2 requires retaining M as it is
-        M_binary = (M > 0).float()
-
-        # Element-wise product for activation shaping
-        return A_binary * M_binary
+        
 
     def random_shape_activations(self, mask_ratio):
         def hook(model, input, output):
@@ -84,6 +94,8 @@ class DomAdaptResNet18(nn.Module):
         self.hooks_activation_shaping = []
         self.activation_maps = []
         
+        self.binary = True
+        self.topK = False
         #List of layers to be activated
         self.active_layers = ['layer2.1.conv2']
         
@@ -100,10 +112,50 @@ class DomAdaptResNet18(nn.Module):
         
     #To do the activation shaping
     def activation_shaping(self, model, input, output):
+        
         M = self.activation_maps.pop(0)
-        A_binary = (output > 0).float()
-        M_binary = (M > 0).float()
-        return A_binary * M_binary
+        
+        
+        if self.topK:
+            # Select the top K values of A (output)
+            
+            M_binary = (M > 0).float()
+            
+            K = 5
+            
+            #EXTENSION 2.b
+            
+            top_values, top_indices = torch.topk(output.flatten(), k=3)
+
+            # Creare un nuovo tensore con tutti i valori a 0
+            A_topK = torch.zeros_like(output)
+
+            # Assegna i valori originali ai loro indici corrispondenti
+            A_topK.view(-1)[top_indices] = output.view(-1)[top_indices]
+
+            """
+            # Stampa i tensori originali e modificati
+            print("Tensore originale:")
+            print(output)
+            print("\nTensore modificato:")
+            print(A_topK)
+             """
+            
+            return A_topK * M_binary
+        
+        elif self.binary:
+            M_binary = (M > 0).float()
+            A_binary = (output > 0).float()
+            
+            # Element-wise product for activation shaping
+            return A_binary * M_binary
+        
+        else:
+            # Extension 2 (Binarization Ablation for M)
+            A_binary = (output > 0).float()
+            
+            return A_binary * M
+      
     
     #To register the activation shaping hooks
     def register_shaping_hooks(self):
@@ -124,4 +176,4 @@ class DomAdaptResNet18(nn.Module):
     def remove_hooks_activation_shaping(self):
         for h in self.hooks_activation_shaping:
             h.remove()
-    
+

@@ -74,7 +74,7 @@ def load_data():
             
         # Create dataset for Domain Adaptation (in this case train_dataset requires source_examples and target_examples)
         train_dataset = DomainAdaptationDataset(source_examples, target_examples, transform=train_transform)
-        test_dataset = BaseDataset(source_examples, transform=test_transform)  
+        test_dataset = BaseDataset(target_examples, transform=test_transform)  
             
 
 
