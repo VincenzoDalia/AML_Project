@@ -91,6 +91,9 @@ class ASHResNet18(nn.Module):
             num_zeros = int(num_elements * (1-mask_ratio))
             random_indices = torch.randperm(num_elements)[:num_zeros]
             M[random_indices] = 0
+            
+            
+            M = M.view(output.shape)
                         
             return self.shape_activation(output, M)
             
