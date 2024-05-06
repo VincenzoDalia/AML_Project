@@ -71,30 +71,17 @@ class ASHResNet18(nn.Module):
     def random_shape_activations(self, mask_ratio):
         def hook(model, input, output):
             
-            """
+             
             num_elements = output.numel()
             num_zeros = int(num_elements * (1-mask_ratio))
             # Create a binary tensor with the appropriate number of ones
             random_indices = torch.randperm(num_elements)[:num_zeros]
-            M_binary = torch.randn(num_elements, device=output.device)
-            M_binary[random_indices] = 0
+            M = torch.randn(num_elements, device=output.device)
+            M[random_indices] = 0
 
             # Reshape the tensor to match the output shape
-            M_binary = M_binary.view(output.shape)
-
-            return self.shape_activation(output, M_binary)
-        
-            """
-            
-            num_elements = output.numel()
-            M = torch.rand_like(output)
-            num_zeros = int(num_elements * (1-mask_ratio))
-            random_indices = torch.randperm(num_elements)[:num_zeros]
-            M[random_indices] = 0
-            
-            
             M = M.view(output.shape)
-                        
+
             return self.shape_activation(output, M)
             
 
