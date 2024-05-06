@@ -22,7 +22,7 @@ class ASHResNet18(nn.Module):
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         self.hooks = []
         
-        self.binary = True
+        self.binary = False
         self.topK = False
 
     def forward(self, x):
@@ -60,9 +60,9 @@ class ASHResNet18(nn.Module):
         
         else:
             # Extension 2.a (Binarization Ablation for M)
-            A_binary = (layer_activation > 0).float()
+            #A_binary = (layer_activation > 0).float()
             
-            return A_binary * M
+            return layer_activation * M
     
         
 
@@ -70,6 +70,7 @@ class ASHResNet18(nn.Module):
 
     def random_shape_activations(self, mask_ratio):
         def hook(model, input, output):
+            """
             num_elements = output.numel()
             num_ones = int(num_elements * mask_ratio)
             # Create a binary tensor with the appropriate number of ones
@@ -81,6 +82,14 @@ class ASHResNet18(nn.Module):
             M_binary = M_binary.view(output.shape)
 
             return self.shape_activation(output, M_binary)
+            """
+            
+            M = torch.rand_like(output)
+            num_zeros = int(output.numel() * (1-mask_ratio))
+            random_indices = torch.randperm(output.numel())[:num_zeros]
+            M[random_indices] = 0
+                        
+            return self.shape_activation(output, M)
 
         return hook
 
