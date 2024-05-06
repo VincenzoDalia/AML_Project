@@ -23,6 +23,7 @@ class ASHResNet18(nn.Module):
         self.hooks = []
         
         self.binary = True
+        self.topK = False
 
     def forward(self, x):
         return self.resnet(x)
@@ -31,17 +32,36 @@ class ASHResNet18(nn.Module):
     def shape_activation(self, layer_activation, M):
         
         
-        A_binary = (layer_activation > 0).float()
-        
-        if self.binary:
+        if self.topK:
+            # Select the top K values of A (output)
+            
             M_binary = (M > 0).float()
+            
+            K = 5
+            
+            #EXTENSION 2.b
+            
+            top_values, top_indices = torch.topk(layer_activation.flatten(), k=3)
+
+            # Creare un nuovo tensore con tutti i valori a 0
+            A_topK = torch.zeros_like(layer_activation)
+
+            # Assegna i valori originali ai loro indici corrispondenti
+            A_topK.view(-1)[top_indices] = layer_activation.view(-1)[top_indices]
+
+            return A_topK * M_binary
+        
+        elif self.binary:
+            M_binary = (M > 0).float()
+            A_binary = (layer_activation > 0).float()
             
             # Element-wise product for activation shaping
             return A_binary * M_binary
         
         else:
+            # Extension 2.a (Binarization Ablation for M)
+            A_binary = (layer_activation > 0).float()
             
-            # Extension 2 (Binarization Ablation)
             return A_binary * M
     
         
@@ -151,7 +171,7 @@ class DomAdaptResNet18(nn.Module):
             return A_binary * M_binary
         
         else:
-            # Extension 2 (Binarization Ablation for M)
+            # Extension 2.a (Binarization Ablation for M)
             A_binary = (output > 0).float()
             
             return A_binary * M
