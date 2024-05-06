@@ -22,9 +22,11 @@ class ASHResNet18(nn.Module):
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         self.hooks = []
         
+        # TEMPORANEMANTE MODIFICA QUA PER ESTENSIONE 2
         self.binary = False
         self.topK = False
-
+        ##############################
+        
     def forward(self, x):
         return self.resnet(x)
 
@@ -33,25 +35,26 @@ class ASHResNet18(nn.Module):
         
         
         if self.topK:
-            # Select the top K values of A (output)
+            
+            # Extension 2.b (TopK)
+            print("Random Maps - Extension 2 (TopK)")
             
             M_binary = (M > 0).float()
             
-            K = 5
-            
-            #EXTENSION 2.b
-            
-            top_values, top_indices = torch.topk(layer_activation.flatten(), k=3)
+            percentage = 0.9 #between 0 and 1
+            k = int(percentage * layer_activation.numel())
+        
+            top_values, top_indices = torch.topk(layer_activation.flatten(), k)
 
-            # Creare un nuovo tensore con tutti i valori a 0
+            #Creating the new A tensor with top K values
             A_topK = torch.zeros_like(layer_activation)
-
-            # Assegna i valori originali ai loro indici corrispondenti
             A_topK.view(-1)[top_indices] = layer_activation.view(-1)[top_indices]
-
+ 
             return A_topK * M_binary
         
         elif self.binary:
+            
+            print("Random Maps - (Binarization)")
             M_binary = (M > 0).float()
             A_binary = (layer_activation > 0).float()
             
@@ -59,8 +62,9 @@ class ASHResNet18(nn.Module):
             return A_binary * M_binary
         
         else:
-            # Extension 2.a (Binarization Ablation for M)
-            #A_binary = (layer_activation > 0).float()
+            
+            # Extension 2.a (Binarization Ablation for A and M)
+            print("Random Maps - Extension 2 (Binarization Ablation)")
             
             return layer_activation * M
     
@@ -117,8 +121,13 @@ class DomAdaptResNet18(nn.Module):
         self.hooks_activation_shaping = []
         self.activation_maps = []
         
-        self.binary = True
+        
+        # TEMPORANEMANTE MODIFICA QUA PER ESTENSIONE 2
+        self.binary = False
         self.topK = False
+        ##############################
+        
+        
         #List of layers to be activated
         self.active_layers = ['layer2.1.conv2']
         
@@ -140,33 +149,26 @@ class DomAdaptResNet18(nn.Module):
         
         
         if self.topK:
-            # Select the top K values of A (output)
+            
+            # Extension 2.b (TopK)
+            print("Domain Adaptation - Extension 2 (TopK)")
             
             M_binary = (M > 0).float()
             
-            K = 5
-            
-            #EXTENSION 2.b
-            
-            top_values, top_indices = torch.topk(output.flatten(), k=3)
+            percentage = 0.9 #between 0 and 1
+            k = int(percentage * output.numel())
+        
+            top_values, top_indices = torch.topk(output.flatten(), k)
 
-            # Creare un nuovo tensore con tutti i valori a 0
+            #Creating the new A tensor with top K values
             A_topK = torch.zeros_like(output)
-
-            # Assegna i valori originali ai loro indici corrispondenti
             A_topK.view(-1)[top_indices] = output.view(-1)[top_indices]
-
-            """
-            # Stampa i tensori originali e modificati
-            print("Tensore originale:")
-            print(output)
-            print("\nTensore modificato:")
-            print(A_topK)
-             """
-            
+ 
             return A_topK * M_binary
         
         elif self.binary:
+            
+            print("Domain Adaptation - (Binarization)")
             M_binary = (M > 0).float()
             A_binary = (output > 0).float()
             
@@ -174,8 +176,9 @@ class DomAdaptResNet18(nn.Module):
             return A_binary * M_binary
         
         else:
-            # Extension 2.a (Binarization Ablation for M)
-            #A_binary = (output > 0).float()
+            
+            # Extension 2.a (Binarization Ablation for A and M)
+            print("Domain Adaptation - Extension 2 (Binarization Ablation)")
             
             return output * M
       
