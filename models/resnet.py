@@ -181,9 +181,9 @@ class DomAdaptResNet18(nn.Module):
         
         else:
             # Extension 2.a (Binarization Ablation for M)
-            A_binary = (output > 0).float()
+            #A_binary = (output > 0).float()
             
-            return A_binary * M
+            return output * M
       
     
     #To register the activation shaping hooks
