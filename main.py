@@ -15,6 +15,7 @@ from parse_args import parse_arguments
 from dataset import PACS
 from models.resnet import BaseResNet18
 from models.resnet import ASHResNet18
+from models.resnet import DomAdaptResNet18
 
 from globals import CONFIG
 
@@ -61,23 +62,49 @@ def train(model, data):
         
         for batch_idx, batch in enumerate(tqdm(data['train'])):
             
+            if CONFIG.experiment in ['domain_adapt']:
+                with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
+                    
+                    # Eval mode to compute activation maps for the target domain without updating the weights
+                    model.eval()
+                    
+                    src_x, src_y, targ_x = batch
+                    src_x, src_y, targ_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), targ_x.to(CONFIG.device)
+                    
+                    model.register_map_hooks()
+                    
+                    # We use torch.no_grad() to avoid computing gradients for 
+                    # the target domain because we are not training on it.
+                    # We only use it to compute the activation maps for the target domain
+                    with torch.no_grad():
+                        model(targ_x)
+                    model.remove_hooks_activation_maps()
+                    model.train()
+            
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-                x, y = batch
-                x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                 
                 if CONFIG.experiment in ['baseline']:
-                  loss = F.cross_entropy(model(x), y)
+                    x, y = batch
+                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
+                    loss = F.cross_entropy(model(x), y)
                 elif CONFIG.experiment in ['random_maps']:
                   # Tweak this ratio
-                  mask_ratio = 1
-                  model.register_random_shaping_hooks(mask_ratio)
-                  loss = F.cross_entropy(model(x), y)
-                  model.remove_hooks()
+                    x, y = batch
+                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
+                    mask_ratio = 1
+                    model.register_random_shaping_hooks(mask_ratio)
+                    loss = F.cross_entropy(model(x), y)
+                    model.remove_hooks()
 
-                ######################################################
-                #elif... TODO: Add here train logic for the other experiments
-                ######################################################
+                elif CONFIG.experiment in ['domain_adapt']:
+                    src_x, src_y, targ_x = batch
+                    src_x, src_y, targ_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), targ_x.to(CONFIG.device)
+                
+                    model.register_shaping_hooks()
+                    loss = F.cross_entropy(model(src_x), src_y)
+                    model.remove_hooks_activation_shaping()
+                  
 
             # Optimization step
             scaler.scale(loss / CONFIG.grad_accum_steps).backward()
@@ -111,8 +138,10 @@ def main():
     # WIP
     if CONFIG.experiment in ['baseline']:
         model = BaseResNet18()
-    elif CONFIG.experiment in ['random_maps', 'domain_adapt']:
+    elif CONFIG.experiment in ['random_maps']:
         model = ASHResNet18()
+    elif CONFIG.experiment in ['domain_adapt']:
+        model = DomAdaptResNet18()
     ######################################################
     #elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
     ######################################################
