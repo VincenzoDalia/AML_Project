@@ -22,4 +22,6 @@ def parse_arguments():
     parser.add_argument('--num_workers', type=int, default=5)
     parser.add_argument('--grad_accum_steps', type=int, default=1)
 
+    #TODO: add TOPK flag, binarize FLAG, topK treshold, MASK RATIO
+
     return _clear_args(parser.parse_args())
