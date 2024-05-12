@@ -13,9 +13,10 @@ import numpy as np
 from parse_args import parse_arguments
 
 from dataset import PACS
+from as_module import ActivationShapingModule
 from models.resnet import BaseResNet18
-from models.resnet import ASHResNet18
-from models.resnet import DomAdaptResNet18
+from models.ras_resnet import RASResNet18
+from models.da_resnet import DomAdaptResNet18
 
 from globals import CONFIG
 
@@ -89,14 +90,12 @@ def train(model, data):
                     x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                     loss = F.cross_entropy(model(x), y)
                 elif CONFIG.experiment in ['random_maps']:
-                  # Tweak this ratio
+                    # Tweak this ratio
                     x, y = batch
                     x, y = x.to(CONFIG.device), y.to(CONFIG.device)
-                    mask_ratio = 1
-                    model.register_random_shaping_hooks(mask_ratio)
+                    model.register_random_shaping_hooks()
                     loss = F.cross_entropy(model(x), y)
                     model.remove_hooks()
-
                 elif CONFIG.experiment in ['domain_adapt']:
                     src_x, src_y, targ_x = batch
                     src_x, src_y, targ_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), targ_x.to(CONFIG.device)
@@ -104,7 +103,6 @@ def train(model, data):
                     model.register_shaping_hooks()
                     loss = F.cross_entropy(model(src_x), src_y)
                     model.remove_hooks_activation_shaping()
-                  
 
             # Optimization step
             scaler.scale(loss / CONFIG.grad_accum_steps).backward()
@@ -130,29 +128,30 @@ def train(model, data):
         torch.save(checkpoint, os.path.join('record', CONFIG.experiment_name, 'last.pth'))
 
 def main():
-    
     # Load dataset
     data = PACS.load_data()
 
     # Load model
-    # WIP
     if CONFIG.experiment in ['baseline']:
         model = BaseResNet18()
-    elif CONFIG.experiment in ['random_maps']:
-        model = ASHResNet18()
-    elif CONFIG.experiment in ['domain_adapt']:
-        model = DomAdaptResNet18()
+    else:
+        shaping_module = ActivationShapingModule()
+        if CONFIG.experiment in ['random_maps']:
+            # TODO: take mask_ratio from args
+            model = RASResNet18(mask_ratio=0.5, shaping_module=shaping_module)
+        elif CONFIG.experiment in ['domain_adapt']:
+            model = DomAdaptResNet18(shaping_module=shaping_module)
     ######################################################
-    #elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
+    # elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
     ######################################################
-    
+
     model.to(CONFIG.device)
 
     if not CONFIG.test_only:
         train(model, data)
     else:
         evaluate(model, data['test'])
-    
+
 
 if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning)
@@ -167,10 +166,10 @@ if __name__ == '__main__':
 
     # Setup logging
     logging.basicConfig(
-        filename=os.path.join(CONFIG.save_dir, 'log.txt'), 
-        format='%(message)s', 
-        level=logging.INFO, 
-        filemode='a'
+        filename=os.path.join(CONFIG.save_dir, 'log.txt'),
+        format='%(message)s',
+        level=logging.INFO,
+        filemode='a',
     )
 
     # Set experiment's device & deterministic behavior
