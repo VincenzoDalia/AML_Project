@@ -10,11 +10,11 @@ class ActivationShapingModule:
         self.binarize = binarize
         self.topK_treshold = topK_treshold
 
-    def binarize(self, m):
+    def binarize_matrix(self, m):
         return (m > 0).float()
 
     def topK_shape(self, A, M, t):
-        M_binary = self.binarize(M)
+        M_binary = self.binarize_matrix(M)
 
         k = int(self.topK_treshold * A.numel())
 
@@ -26,8 +26,8 @@ class ActivationShapingModule:
         return A_topK * M_binary
 
     def binarize_then_shape(self, A, M):
-        M_binary = self.binarize(M)
-        A_binary = self.binarize(A)
+        M_binary = self.binarize_matrix(M)
+        A_binary = self.binarize_matrix(A)
         return A_binary * M_binary
 
     def shape_activation(self, activation_map, M):
@@ -39,7 +39,7 @@ class ActivationShapingModule:
 
         M: the matrix with which to perform the shaping.
 
-        topK: if True ...
+        topK: if True keep only the topK elements of the activation map
         binarize: if True binarize both the activation map and M
 
         Returns:
@@ -50,6 +50,6 @@ class ActivationShapingModule:
             return self.topK_shape(activation_map, M, self.topK_treshold)
 
         if self.binarize:
-            self.binarize_then_shape(activation_map, M)
+            return self.binarize_then_shape(activation_map, M)
 
         return activation_map * M

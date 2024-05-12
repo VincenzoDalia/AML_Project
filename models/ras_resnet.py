@@ -21,12 +21,12 @@ class RASResNet18(nn.Module):
 
     def random_shape_activation(self, model, input, output):
         num_elements = output.numel()
-        num_zeros = int(num_elements * (1 - self.mask_ratio))
-
+        num_ones = int(num_elements * self.mask_ratio)
+        
         # Create a binary tensor with the appropriate number of ones
-        random_indices = torch.randperm(num_elements)[:num_zeros]
-        M = torch.randn(num_elements, device=output.device)
-        M[random_indices] = 0
+        random_indices = torch.randperm(num_elements)[:num_ones]
+        M = torch.zeros(num_elements, device=output.device)
+        M[random_indices] = 1
         # Reshape the tensor to match the output shape
         M = M.view(output.shape)
 
@@ -34,8 +34,8 @@ class RASResNet18(nn.Module):
 
     def register_random_shaping_hooks(self):
         for name, module in self.resnet.named_modules():
-            if isinstance(module, nn.Conv2d) and name in self.random_shaping_layers:
-                self.hooks_activation_shaping.append(
+            if name in self.random_shaping_layers:
+                self.hooks.append(
                     module.register_forward_hook(self.random_shape_activation)
                 )
 

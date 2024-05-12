@@ -7,8 +7,8 @@ class DomAdaptResNet18(nn.Module):
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
 
-        self.hooks_activation_maps = []
-        self.hooks_activation_shaping = []
+        self.maps_storing_hooks = []
+        self.shaping_hooks = []
         self.activation_maps = []
 
         self.shaping_module = shaping_module
@@ -21,8 +21,8 @@ class DomAdaptResNet18(nn.Module):
     # To store the activation maps
     def register_map_storing_hooks(self):
         for name, module in self.resnet.named_modules():
-            if isinstance(module, nn.Conv2d) and name in self.adapt_layers:
-                self.hooks_activation_maps.append(
+            if name in self.adapt_layers:
+                self.maps_storing_hooks.append(
                     module.register_forward_hook(self.store_maps)
                 )
 
@@ -36,15 +36,15 @@ class DomAdaptResNet18(nn.Module):
 
     def register_shaping_hooks(self):
         for name, module in self.resnet.named_modules():
-            if isinstance(module, nn.Conv2d) and name in self.adapt_layers:
-                self.hooks_activation_shaping.append(
+            if name in self.adapt_layers:
+                self.shaping_hooks.append(
                     module.register_forward_hook(self.adapt_activation)
                 )
 
-    def remove_hooks_activation_maps(self):
-        for h in self.hooks_activation_maps:
+    def remove_maps_storing_hooks(self):
+        for h in self.maps_storing_hooks:
             h.remove()
 
-    def remove_hooks_activation_shaping(self):
-        for h in self.hooks_activation_shaping:
+    def remove_shaping_hooks(self):
+        for h in self.shaping_hooks:
             h.remove()

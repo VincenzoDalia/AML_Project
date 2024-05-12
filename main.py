@@ -59,7 +59,6 @@ def train(model, data):
 
     # Optimization loop
     for epoch in range(cur_epoch, CONFIG.epochs):
-        model.train()
         
         for batch_idx, batch in enumerate(tqdm(data['train'])):
             
@@ -72,15 +71,16 @@ def train(model, data):
                     src_x, src_y, targ_x = batch
                     src_x, src_y, targ_x = src_x.to(CONFIG.device), src_y.to(CONFIG.device), targ_x.to(CONFIG.device)
                     
-                    model.register_map_hooks()
+                    model.register_map_storing_hooks()
                     
                     # We use torch.no_grad() to avoid computing gradients for 
                     # the target domain because we are not training on it.
                     # We only use it to compute the activation maps for the target domain
                     with torch.no_grad():
                         model(targ_x)
-                    model.remove_hooks_activation_maps()
-                    model.train()
+                    model.remove_maps_storing_hooks()
+                    
+            model.train()
             
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
@@ -90,7 +90,6 @@ def train(model, data):
                     x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                     loss = F.cross_entropy(model(x), y)
                 elif CONFIG.experiment in ['random_maps']:
-                    # Tweak this ratio
                     x, y = batch
                     x, y = x.to(CONFIG.device), y.to(CONFIG.device)
                     model.register_random_shaping_hooks()
@@ -102,7 +101,7 @@ def train(model, data):
                 
                     model.register_shaping_hooks()
                     loss = F.cross_entropy(model(src_x), src_y)
-                    model.remove_hooks_activation_shaping()
+                    model.remove_shaping_hooks()
 
             # Optimization step
             scaler.scale(loss / CONFIG.grad_accum_steps).backward()
@@ -138,7 +137,7 @@ def main():
         shaping_module = ActivationShapingModule()
         if CONFIG.experiment in ['random_maps']:
             # TODO: take mask_ratio from args
-            model = RASResNet18(mask_ratio=0.5, shaping_module=shaping_module)
+            model = RASResNet18(mask_ratio=0.9, shaping_module=shaping_module)
         elif CONFIG.experiment in ['domain_adapt']:
             model = DomAdaptResNet18(shaping_module=shaping_module)
     ######################################################
