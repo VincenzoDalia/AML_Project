@@ -23,8 +23,13 @@ from models.load import load_model
 from checkpoints import load_epoch_from_checkpoint
 from checkpoints import save_checkpoint
 
-
 from globals import CONFIG
+
+
+def unpack_batch_to_device(batch):
+    x = batch[0]
+    y = batch[1]
+    return x.to(CONFIG.device), y.to(CONFIG.device)
 
 
 @torch.no_grad()
@@ -66,31 +71,23 @@ def train(model, data):
                 with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
                     # Eval mode to compute activation maps for the target domain without updating the weights
                     model.eval()
+                    targ_x = batch[2].to(CONFIG.device)
                     model.store_activation_maps(targ_x)
 
             model.train()
 
             # Compute loss
             with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-                
                 if CONFIG.experiment in ['baseline']:
-                    x, y = batch
-                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
+                    x, y = unpack_batch_to_device(batch)
                     loss = F.cross_entropy(model(x), y)
                 elif CONFIG.experiment in ['random_maps']:
-                    x, y = batch
-                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
+                    x, y = unpack_batch_to_device(batch)
                     model.register_random_shaping_hooks()
                     loss = F.cross_entropy(model(x), y)
                     model.remove_hooks()
                 elif CONFIG.experiment in ['domain_adapt']:
-                    src_x, src_y, targ_x = batch
-                    src_x, src_y, targ_x = (
-                        src_x.to(CONFIG.device),
-                        src_y.to(CONFIG.device),
-                        targ_x.to(CONFIG.device),
-                    )
-
+                    src_x, src_y = x, y = unpack_batch_to_device(batch)
                     model.register_shaping_hooks()
                     loss = F.cross_entropy(model(src_x), src_y)
                     model.remove_shaping_hooks()
@@ -101,7 +98,7 @@ def train(model, data):
                 scaler.step(optimizer)
                 optimizer.zero_grad(set_to_none=True)
                 scaler.update()
-                
+
         scheduler.step()
 
         # Test current epoch
