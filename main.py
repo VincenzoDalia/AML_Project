@@ -16,7 +16,7 @@ from dataset import PACS
 from as_module import ActivationShapingModule
 from models.resnet import BaseResNet18
 from models.ras_resnet import RASResNet18
-from models.da_resnet import DomAdaptResNet18
+from models.da_resnet import DAResNet18
 
 from globals import CONFIG
 
@@ -129,17 +129,19 @@ def train(model, data):
 def main():
     # Load dataset
     data = PACS.load_data()
-
     # Load model
     if CONFIG.experiment in ['baseline']:
         model = BaseResNet18()
     else:
-        shaping_module = ActivationShapingModule()
+        shaping_module = ActivationShapingModule(
+          topK=CONFIG.topK, 
+          topK_treshold=CONFIG.tk_treshold,
+          binarize=not CONFIG.no_binarize
+        )
         if CONFIG.experiment in ['random_maps']:
-            # TODO: take mask_ratio from args
-            model = RASResNet18(mask_ratio=0.9, shaping_module=shaping_module)
+            model = RASResNet18(mask_ratio=CONFIG.mask_ratio, shaping_module=shaping_module)
         elif CONFIG.experiment in ['domain_adapt']:
-            model = DomAdaptResNet18(shaping_module=shaping_module)
+            model = DAResNet18(shaping_module=shaping_module)
     ######################################################
     # elif... TODO: Add here model loading for the other experiments (eg. DA and optionally DG)
     ######################################################

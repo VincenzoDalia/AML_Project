@@ -1,9 +1,9 @@
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
 
-class DomAdaptResNet18(nn.Module):
+class DAResNet18(nn.Module):
     def __init__(self, shaping_module, adapt_layers=["layer2.1.conv2"]):
-        super(DomAdaptResNet18, self).__init__()
+        super(DAResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
 

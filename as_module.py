@@ -1,11 +1,8 @@
 import torch
 
-from globals import CONFIG
-
 
 class ActivationShapingModule:
     def __init__(self, topK=False, binarize=True, topK_treshold=1):
-        # TODO: Take from CONFIG
         self.topK = topK
         self.binarize = binarize
         self.topK_treshold = topK_treshold

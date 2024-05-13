@@ -22,6 +22,9 @@ def parse_arguments():
     parser.add_argument('--num_workers', type=int, default=5)
     parser.add_argument('--grad_accum_steps', type=int, default=1)
 
-    #TODO: add TOPK flag, binarize FLAG, topK treshold, MASK RATIO
+    parser.add_argument('--topK', action='store_true', help='Wheter to adapt activation map to output topKs')
+    parser.add_argument('--tk_treshold', type=float, default=1, help='If topK is enabled, this controls K (how many elements will be retained in the activation map)')
+    parser.add_argument('--no_binarize', action='store_true', help='Wheter to keep activation mask as it is, without binarizing it')
+    parser.add_argument('--mask_ratio', type=float, default=1, help='If the experiment is random_maps, this controls the ratio of 1s in the random mask')
 
     return _clear_args(parser.parse_args())
