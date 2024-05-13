@@ -1,5 +1,5 @@
 # AML 2023/2024 Project - Activation Shaping for Domain Adaptation
-"Activation Shaping for Domain Adaptation" project - Advanced Machine Learning Course 2023/2024 @ PoliTo - Vincenzo Dalia, Mario Todaro, Fabio Barbieri
+"Activation Shaping for Domain Adaptation" - Vincenzo Dalia, Mario Todaro, Fabio Barbieri
 
 ## Getting Started
 Make sure to have a CUDA capable device, supporting at least CUDA 11.4, installed and correctly configured on your system. 
@@ -38,7 +38,10 @@ In the following, you can find a brief description of the included files, alongs
 | `globals.py` | contains the global variables of the program. | - |
 | `dataset/PACS.py` | contains the code to load data, build splits and dataloaders. | Loading and Dataset object creation for each experiment. |
 | `dataset/utils.py` | contains utilities (eg. datasets classes) to correctly setup the data pipeline. | Dataset classes for each experiment. |
-| `models/resnet.py` | contains the architectures and modules used in the project. | (1) Activation Shaping Module. (2) Custom ResNet18 with the Activation Shaping Module. |
+| `models/resnet.py` | contains the resnet18 baseline |
+| `models/as_module.py` | contains the custom Activation Shaping Module |
+| `models/ras_resnet.py` | contains the architecture that performs random shaping with the custom module |
+| `models/da_resnet.py` | contains the architecture that performs domain adaptation with the custom module |
 
 ## Running The Experiments
 To run the experiments you can use, copy and modify the provided launch script `launch_scripts/baseline.sh`.
@@ -49,8 +52,6 @@ As an example, to reproduce the baseline you can launch the three experiments as
 ./launch_scripts/baseline.sh photo
 ```
 where the argument following the invocation of the script is programmed to be the target domain.
-
-*NOTE: you should upload with your code also these scripts as they are fundamental to run your code and reproduce your results.*
 
 In the following, you can find a brief description of the relevant command line arguments when launching the experiments.
 
@@ -68,12 +69,17 @@ In the following, you can find a brief description of the relevant command line 
 | `--cpu` | if set, the experiment will run on the CPU. |
 | `--test_only` | if set, the experiment will skip the training procedure and just run the evaluation on the test set. |
 | `--seed` | the integer used to seed all the experiments, to make results as reproducible as possible. *Do not change it*, it defaults to 0. |
+| `--topK` | if set, topK shaping of activation map is performed (for both experiments) |
+| `--tk_treshold` | if set, and the topK flag is set, this controls the K in the topK shaping of activation maps |
+| `--no_binarize` | if set, the activation shaping module will not binarize the masks |
+| `--mask_ratio` | it controls the number of ones in the random masks (random_maps experiment only) |
+
+*Note: you must use --flag running the scripts to pass other args then the experiment name. so:*
+```
+./launch_scripts/baseline.sh cartoon --topK --no_binarize --mask_ratio=0.9 --tk_treshold=0.5
+```
 
 ## Baseline Results (see point 0. of the project)
 |          | Art Painting &#8594; Cartoon | Art Painting &#8594; Sketch | Art Painting &#8594; Photo | Average |
 | :------: | :--------------------------: | :-------------------------: | :------------------------: | :-----: |
 | Baseline |            54.52             |             40.44           |            95.93           |  63.63  |
-
-
-## Bug Reporting
-You are encouraged to share in the project's dedicated Slack channel any bugs you discover in the code. It's incredibly valuable for everyone involved to be aware of any issues as soon as they arise, helping to address them promptly. Your contribution is greatly appreciated!
