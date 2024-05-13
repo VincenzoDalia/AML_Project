@@ -1,5 +1,9 @@
+import torch
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
+
+from globals import CONFIG
+
 
 class DAResNet18(nn.Module):
     def __init__(self, shaping_module, adapt_layers=["layer2.1.conv2"]):
@@ -18,15 +22,28 @@ class DAResNet18(nn.Module):
     def forward(self, x):
         return self.resnet(x)
 
+    def store_activation_maps(self, targ_x):
+        with torch.autocast(
+            device_type=CONFIG.device, dtype=torch.float16, enabled=True
+        ):
+
+            self.register_map_storing_hooks()
+            # We use torch.no_grad() to avoid computing gradients for
+            # the target domain because we are not training on it.
+            # We only use it to compute the activation maps for the target domain
+            with torch.no_grad():
+                self(targ_x)
+            self.remove_maps_storing_hooks()
+
     # To store the activation maps
     def register_map_storing_hooks(self):
         for name, module in self.resnet.named_modules():
             if name in self.adapt_layers:
                 self.maps_storing_hooks.append(
-                    module.register_forward_hook(self.store_maps)
+                    module.register_forward_hook(self.store_map)
                 )
 
-    def store_maps(self, module, input, output):
+    def store_map(self, module, input, output):
         self.activation_maps.append(output.clone().detach())
 
     # To do the activation shaping
