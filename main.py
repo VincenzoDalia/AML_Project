@@ -20,6 +20,10 @@ from models.ras_resnet import RASResNet18
 from models.da_resnet import DAResNet18
 from models.load import load_model
 
+from checkpoints import load_epoch_from_checkpoint
+from checkpoints import save_checkpoint
+
+
 from globals import CONFIG
 
 
@@ -52,22 +56,14 @@ def train(model, data):
     scaler = torch.cuda.amp.GradScaler(enabled=True)
 
     # Load checkpoint (if it exists)
-    cur_epoch = 0
-    if os.path.exists(os.path.join('record', CONFIG.experiment_name, 'last.pth')):
-        checkpoint = torch.load(os.path.join('record', CONFIG.experiment_name, 'last.pth'))
-        cur_epoch = checkpoint['epoch']
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        scheduler.load_state_dict(checkpoint['scheduler'])
-        model.load_state_dict(checkpoint['model'])
+    cur_epoch = load_epoch_from_checkpoint(model, scheduler, optimizer)
 
     # Optimization loop
     for epoch in range(cur_epoch, CONFIG.epochs):
-
         for batch_idx, batch in enumerate(tqdm(data['train'])):
 
             if CONFIG.experiment in ['domain_adapt']:
                 with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-                    
                     # Eval mode to compute activation maps for the target domain without updating the weights
                     model.eval()
                     model.store_activation_maps(targ_x)
@@ -101,12 +97,11 @@ def train(model, data):
 
             # Optimization step
             scaler.scale(loss / CONFIG.grad_accum_steps).backward()
-            
             if ((batch_idx + 1) % CONFIG.grad_accum_steps == 0) or (batch_idx + 1 == len(data['train'])):
                 scaler.step(optimizer)
                 optimizer.zero_grad(set_to_none=True)
                 scaler.update()
-
+                
         scheduler.step()
 
         # Test current epoch
@@ -114,13 +109,7 @@ def train(model, data):
         evaluate(model, data['test'])
 
         # Save checkpoint
-        checkpoint = {
-            'epoch': epoch + 1,
-            'optimizer': optimizer.state_dict(),
-            'scheduler': scheduler.state_dict(),
-            'model': model.state_dict(),
-        }
-        torch.save(checkpoint, os.path.join('record', CONFIG.experiment_name, 'last.pth'))
+        save_checkpoint(epoch, model, scheduler, optimizer)
 
 def main():
     # Load dataset
