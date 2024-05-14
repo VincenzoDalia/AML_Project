@@ -15,9 +15,9 @@ def load_model(experiment):
         )
 
     if experiment == "random_maps":
-        return RASResNet18(mask_ratio=CONFIG.mask_ratio, shaping_module=shaping_module)
+        return RASResNet18(mask_ratio=CONFIG.mask_ratio, shaping_module=shaping_module, random_shape_layers=CONFIG.layers)
 
     if experiment == "domain_adapt":
-        return DAResNet18(shaping_module=shaping_module)
+        return DAResNet18(shaping_module=shaping_module, adapt_layers=CONFIG.layers)
 
     return BaseResNet18()

@@ -12,7 +12,7 @@ class RASResNet18(nn.Module):
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         self.shaping_module = shaping_module
-        self.random_shaping_layers = random_shaping_layers
+        self.random_shape_layers = random_shaping_layers
         self.hooks = []
         self.mask_ratio = mask_ratio
 
@@ -34,7 +34,7 @@ class RASResNet18(nn.Module):
 
     def register_random_shaping_hooks(self):
         for name, module in self.resnet.named_modules():
-            if name in self.random_shaping_layers:
+            if name in self.random_shape_layers:
                 self.hooks.append(
                     module.register_forward_hook(self.random_shape_activation)
                 )

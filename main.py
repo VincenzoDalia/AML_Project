@@ -1,4 +1,3 @@
-# Prova commit da Colab da Pippo
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,6 +23,7 @@ from checkpoints import load_epoch_from_checkpoint
 from checkpoints import save_checkpoint
 
 from globals import CONFIG
+from globals import update_config
 
 
 def unpack_batch_to_device(batch):
@@ -115,6 +115,10 @@ def main():
     model = load_model(CONFIG.experiment)
     model.to(CONFIG.device)
 
+    print(model.adapt_layers)
+    
+    return
+
     if not CONFIG.test_only:
         train(model, data)
     else:
@@ -126,7 +130,7 @@ if __name__ == '__main__':
 
     # Parse arguments
     args = parse_arguments()
-    CONFIG.update(vars(args))
+    update_config(args)
 
     # Setup output directory
     CONFIG.save_dir = os.path.join('record', CONFIG.experiment_name)

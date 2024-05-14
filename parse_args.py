@@ -27,4 +27,15 @@ def parse_arguments():
     parser.add_argument('--no_binarize', action='store_true', help='Wheter to keep activation mask as it is, without binarizing it')
     parser.add_argument('--mask_ratio', type=float, default=1, help='If the experiment is random_maps, this controls the ratio of 1s in the random mask')
 
+    parser.add_argument('--layers', nargs='+', default=[], 
+      help='''The layers after which to hook the activation shaping module. 
+              Must be passed with this pattern: RESNET_LAYER.LEVEL.CONV_NUM, 
+              for example: 2.0.1 corresponds to layer2.0.conv1. 
+              Invalid layers are ignored.
+              To hook a relu layer, use the pattern : 2.0.r, for layer2.0.relu.
+              To hook the avgpool, use "avgpool.
+              To hook the first convolution, conv1, use : 1
+              '''
+    )
+
     return _clear_args(parser.parse_args())
