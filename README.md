@@ -17,7 +17,7 @@ pip install -r requirements.txt
 ```
 data/PACS/kfold/art_painting/dog/pic_001.jpg
 data/PACS/kfold/art_painting/dog/pic_002.jpg
-data/PACS/kfold/art_painting/dog/pic_003.jpg
+data/PACS/kfold/art_painting/dog/pic_003.jpgù
 ...
 ```
 
@@ -69,6 +69,7 @@ In the following, you can find a brief description of the relevant command line 
 | `--cpu` | if set, the experiment will run on the CPU. |
 | `--test_only` | if set, the experiment will skip the training procedure and just run the evaluation on the test set. |
 | `--seed` | the integer used to seed all the experiments, to make results as reproducible as possible. *Do not change it*, it defaults to 0. |
+| `--layers` | The layers after which to hook the activation shaping module. Any number of strings following this pattern: RESNET_LAYER.LEVEL CONV_NUM, for example: 2.0.1 corresponds to resnet layer2.0.conv1. To hook a relu layer, use the pattern : 2.0.r, for layer2.0.relu. To hook the avgpool, use "avgpool". To hook the first convolution, resnet conv1, use : 1. Invalid/Duplicated layers are ignored. |
 | `--topK` | if set, topK shaping of activation map is performed (for both experiments) |
 | `--tk_treshold` | if set, and the topK flag is set, this controls the K in the topK shaping of activation maps |
 | `--no_binarize` | if set, the activation shaping module will not binarize the masks |
