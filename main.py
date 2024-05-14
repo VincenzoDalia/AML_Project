@@ -115,10 +115,6 @@ def main():
     model = load_model(CONFIG.experiment)
     model.to(CONFIG.device)
 
-    print(model.adapt_layers)
-    
-    return
-
     if not CONFIG.test_only:
         train(model, data)
     else:

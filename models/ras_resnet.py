@@ -6,13 +6,13 @@ from torchvision.models import resnet18, ResNet18_Weights
 # Modifies 'BaseResNet18' including the Activation Shaping Module
 class RASResNet18(nn.Module):
     def __init__(
-        self, mask_ratio, shaping_module, random_shaping_layers=["layer2.1.conv2"]
+        self, mask_ratio, shaping_module, random_shape_layers=["layer2.1.conv2"]
     ):
         super(RASResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         self.shaping_module = shaping_module
-        self.random_shape_layers = random_shaping_layers
+        self.random_shape_layers = random_shape_layers
         self.hooks = []
         self.mask_ratio = mask_ratio
 
