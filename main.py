@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
     # Setup logging
     logging.basicConfig(
-        filename=os.path.join(CONFIG.save_dir, 'log.txt'),
+        filename=os.path.join(CONFIG.save_dir, f"log_{CONFIG.layers}_{CONFIG.mask_ratio}.txt"),
         format='%(message)s',
         level=logging.INFO,
         filemode='a',
