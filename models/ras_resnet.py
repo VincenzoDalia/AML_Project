@@ -16,8 +16,6 @@ class RASResNet18(nn.Module):
         self.hooks = []
         self.mask_ratio = mask_ratio
 
-        print("LAYERS ATTIVI: ", self.random_shape_layers)
-
     def forward(self, x):
         return self.resnet(x)
 
