@@ -36,12 +36,14 @@ def unpack_batch_to_device(batch):
 def evaluate(model, data):
     model.eval()
 
-    acc_meter = Accuracy(task='multiclass', num_classes=CONFIG.num_classes)
+    acc_meter = Accuracy(task="multiclass", num_classes=CONFIG.num_classes)
     acc_meter = acc_meter.to(CONFIG.device)
 
     loss = [0.0, 0]
     for x, y in tqdm(data):
-        with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
+        with torch.autocast(
+            device_type=CONFIG.device, dtype=torch.float16, enabled=True
+        ):
             x, y = x.to(CONFIG.device), y.to(CONFIG.device)
             logits = model(x)
             acc_meter.update(logits, y)
@@ -50,14 +52,18 @@ def evaluate(model, data):
 
     accuracy = acc_meter.compute()
     loss = loss[0] / loss[1]
-    logging.info(f'Accuracy: {100 * accuracy:.2f} - Loss: {loss}')
+    logging.info(f"Accuracy: {100 * accuracy:.2f} - Loss: {loss}")
 
 
 def train(model, data):
 
     # Create optimizers & schedulers
-    optimizer = torch.optim.SGD(model.parameters(), weight_decay=0.0005, momentum=0.9, nesterov=True, lr=0.001)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=int(CONFIG.epochs * 0.8), gamma=0.1)
+    optimizer = torch.optim.SGD(
+        model.parameters(), weight_decay=0.0005, momentum=0.9, nesterov=True, lr=0.001
+    )
+    scheduler = torch.optim.lr_scheduler.StepLR(
+        optimizer, step_size=int(CONFIG.epochs * 0.8), gamma=0.1
+    )
     scaler = torch.cuda.amp.GradScaler(enabled=True)
 
     # Load checkpoint (if it exists)
@@ -65,10 +71,12 @@ def train(model, data):
 
     # Optimization loop
     for epoch in range(cur_epoch, CONFIG.epochs):
-        for batch_idx, batch in enumerate(tqdm(data['train'])):
+        for batch_idx, batch in enumerate(tqdm(data["train"])):
 
-            if CONFIG.experiment in ['domain_adapt']:
-                with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
+            if CONFIG.experiment in ["domain_adapt"]:
+                with torch.autocast(
+                    device_type=CONFIG.device, dtype=torch.float16, enabled=True
+                ):
                     # Eval mode to compute activation maps for the target domain without updating the weights
                     model.eval()
                     targ_x = batch[2].to(CONFIG.device)
@@ -77,16 +85,18 @@ def train(model, data):
             model.train()
 
             # Compute loss
-            with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
-                if CONFIG.experiment in ['baseline']:
+            with torch.autocast(
+                device_type=CONFIG.device, dtype=torch.float16, enabled=True
+            ):
+                if CONFIG.experiment in ["baseline"]:
                     x, y = unpack_batch_to_device(batch)
                     loss = F.cross_entropy(model(x), y)
-                elif CONFIG.experiment in ['random_maps']:
+                elif CONFIG.experiment in ["random_maps"]:
                     x, y = unpack_batch_to_device(batch)
                     model.register_random_shaping_hooks()
                     loss = F.cross_entropy(model(x), y)
                     model.remove_hooks()
-                elif CONFIG.experiment in ['domain_adapt']:
+                elif CONFIG.experiment in ["domain_adapt"]:
                     src_x, src_y = x, y = unpack_batch_to_device(batch)
                     model.register_shaping_hooks()
                     loss = F.cross_entropy(model(src_x), src_y)
@@ -94,7 +104,9 @@ def train(model, data):
 
             # Optimization step
             scaler.scale(loss / CONFIG.grad_accum_steps).backward()
-            if ((batch_idx + 1) % CONFIG.grad_accum_steps == 0) or (batch_idx + 1 == len(data['train'])):
+            if ((batch_idx + 1) % CONFIG.grad_accum_steps == 0) or (
+                batch_idx + 1 == len(data["train"])
+            ):
                 scaler.step(optimizer)
                 optimizer.zero_grad(set_to_none=True)
                 scaler.update()
@@ -102,11 +114,12 @@ def train(model, data):
         scheduler.step()
 
         # Test current epoch
-        logging.info(f'[TEST @ Epoch={epoch}]')
-        evaluate(model, data['test'])
+        logging.info(f"[TEST @ Epoch={epoch}]")
+        evaluate(model, data["test"])
 
         # Save checkpoint
         save_checkpoint(epoch, model, scheduler, optimizer)
+
 
 def main():
     # Load dataset
@@ -118,31 +131,34 @@ def main():
     if not CONFIG.test_only:
         train(model, data)
     else:
-        evaluate(model, data['test'])
+        evaluate(model, data["test"])
 
 
-if __name__ == '__main__':
-    warnings.filterwarnings('ignore', category=UserWarning)
+if __name__ == "__main__":
+    warnings.filterwarnings("ignore", category=UserWarning)
 
     # Parse arguments
     args = parse_arguments()
     update_config(args)
 
     # Setup output directory
-    CONFIG.save_dir = os.path.join('record', CONFIG.experiment_name)
+    CONFIG.save_dir = os.path.join("record", CONFIG.experiment_name)
     os.makedirs(CONFIG.save_dir, exist_ok=True)
 
     # Setup logging
     logging.basicConfig(
-        filename=os.path.join(CONFIG.save_dir, f"log_{CONFIG.layers}_{CONFIG.mask_ratio}.txt"),
-        format='%(message)s',
+        filename=os.path.join(
+            CONFIG.save_dir,
+            f"log_{CONFIG.layers}_{CONFIG.mask_ratio}_eps{CONFIG.epsilon}_tk{CONFIG.topK}-{CONFIG.tk_treshold}_nb{CONFIG.no_binarize}.txt",
+        ),
+        format="%(message)s",
         level=logging.INFO,
-        filemode='a',
+        filemode="a",
     )
 
     # Set experiment's device & deterministic behavior
     if CONFIG.cpu:
-        CONFIG.device = torch.device('cpu')
+        CONFIG.device = torch.device("cpu")
 
     torch.manual_seed(CONFIG.seed)
     random.seed(CONFIG.seed)
