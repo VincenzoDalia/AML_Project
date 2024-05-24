@@ -149,7 +149,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         filename=os.path.join(
             CONFIG.save_dir,
-            f"log_{CONFIG.layers}_{CONFIG.mask_ratio}_eps{CONFIG.epsilon}_tk{CONFIG.topK}-{CONFIG.tk_treshold}_nb{CONFIG.no_binarize}.txt",
+            f"{CONFIG.dataset_args['target_domain']}_{CONFIG.layers}_{CONFIG.mask_ratio}_eps{CONFIG.epsilon}_tk{CONFIG.topK}-{CONFIG.tk_treshold}_nb{CONFIG.no_binarize}.txt",
         ),
         format="%(message)s",
         level=logging.INFO,
