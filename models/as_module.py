@@ -7,9 +7,11 @@ class ActivationShapingModule:
         self.binarize = binarize
         self.topK_treshold = topK_treshold
         self.epsilon = epsilon
-
+    
     def binarize_matrix(self, m):
-        return (m > 0).float() + (m <= 0).float() * self.epsilon
+        result = torch.ones_like(m) * self.epsilon
+        result[m > 0] = 1.0
+        return result
     
     def topK_shape(self, A, M, t):
         M_binary = self.binarize_matrix(M)
