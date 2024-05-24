@@ -2,14 +2,15 @@ import torch
 
 
 class ActivationShapingModule:
-    def __init__(self, topK=False, binarize=True, topK_treshold=1):
+    def __init__(self, topK=False, binarize=True, topK_treshold=1, epsilon=0):
         self.topK = topK
         self.binarize = binarize
         self.topK_treshold = topK_treshold
+        self.epsilon = epsilon
 
     def binarize_matrix(self, m):
-        return (m > 0).float()
-
+        return (m > 0).float() + (m <= 0).float() * self.epsilon
+    
     def topK_shape(self, A, M, t):
         M_binary = self.binarize_matrix(M)
 

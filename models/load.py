@@ -12,6 +12,7 @@ def load_model(experiment):
             topK=CONFIG.topK,
             topK_treshold=CONFIG.tk_treshold,
             binarize=not CONFIG.no_binarize,
+            epsilon=CONFIG.epsilon,
         )
 
     if experiment == "random_maps":
