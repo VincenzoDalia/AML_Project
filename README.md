@@ -1,12 +1,6 @@
 # AML 2023/2024 Project - Activation Shaping for Domain Adaptation
 "Activation Shaping for Domain Adaptation" - Vincenzo Dalia, Mario Todaro, Fabio Barbieri
 
-## Getting Started
-Once you have properly setup everything, make sure you are in the correct directory and run from the command line:
-```bash
-pip install -r requirements.txt
-```
-
 ## Base Code Structure
 In the following, you can find a brief description of the included files, alongside where it is suggested to edit the code.
 
@@ -56,7 +50,7 @@ In the following, you can find a brief description of the relevant command line 
 ## Domain adaptation most improving experiments
 |          | Art Painting &#8594; Cartoon | Art Painting &#8594; Sketch | Art Painting &#8594; Photo | Average |
 | :------: | :--------------------------: | :-------------------------: | :------------------------: | :-----: |
-| 3.1.2, 4.1.bn2, topK90, eps = 0.1 |            60,58             |             49,27           |            94,73           |  68,19  |
+| 4.1.2, 4.1.bn2, topK90, eps = 0.1 |            60,58             |             49,27           |            94,73           |  68,19  |
 
 ## Random shaping most improving experiments
 |          | Art Painting &#8594; Cartoon | Art Painting &#8594; Sketch | Art Painting &#8594; Photo | Average |
