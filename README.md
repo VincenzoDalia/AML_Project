@@ -33,6 +33,8 @@ In the following, you can find a brief description of the relevant command line 
 | `--tk_treshold` | if set, and the topK flag is set, this controls the K in the topK shaping of activation maps |
 | `--no_binarize` | if set, the activation shaping module will not binarize the masks |
 | `--mask_ratio` | it controls the number of ones in the random masks (random_maps experiment only) |
+| `--use_bernoulli` | if the experiment is random_maps, it sets the number of 1s drawing from a mask_ratio bernoulli dist |
+
 
 *Note: you must use --flag running the scripts to pass other args then the experiment name. so:*
 ```

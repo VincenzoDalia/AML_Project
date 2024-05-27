@@ -53,6 +53,11 @@ def parse_arguments():
         help="If the experiment is random_maps, this controls the ratio of 1s in the random mask",
     )
     parser.add_argument(
+        "--use_bernoulli",
+        action="store_true",
+        help="Wheter to shape the activation drawing from a mask_ratio bernoulli distribution while performing random maps",
+    )
+    parser.add_argument(
         "--epsilon",
         type=float,
         default=0,

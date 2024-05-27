@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 import torch
 import torch.nn as nn
 from torchvision.models import resnet18, ResNet18_Weights
@@ -6,7 +7,11 @@ from torchvision.models import resnet18, ResNet18_Weights
 # Modifies 'BaseResNet18' including the Activation Shaping Module
 class RASResNet18(nn.Module):
     def __init__(
-        self, mask_ratio, shaping_module, random_shape_layers=["layer2.1.conv2"]
+        self,
+        mask_ratio,
+        use_bernoulli,
+        shaping_module,
+        random_shape_layers=["layer2.1.conv2"],
     ):
         super(RASResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
@@ -15,14 +20,27 @@ class RASResNet18(nn.Module):
         self.random_shape_layers = random_shape_layers
         self.hooks = []
         self.mask_ratio = mask_ratio
+        self.use_bernoulli = use_bernoulli
 
     def forward(self, x):
         return self.resnet(x)
 
     def random_shape_activation(self, model, input, output):
+        if self.use_bernoulli:
+            return self.shape_with_bernoulli(output)
+
+        return self.shape_with_exact_ratio(output)
+
+    def shape_with_bernoulli(self, output):
+        p = torch.full_like(output, self.mask_ratio)
+        M = torch.bernoulli(p)
+
+        return self.shaping_module.shape_activation(output, M)
+
+    def shape_with_exact_ratio(self, output):
         num_elements = output.numel()
         num_ones = int(num_elements * self.mask_ratio)
-        
+
         # Create a binary tensor with the appropriate number of ones
         random_indices = torch.randperm(num_elements)[:num_ones]
         M = torch.zeros(num_elements, device=output.device)
