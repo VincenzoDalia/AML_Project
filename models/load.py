@@ -13,7 +13,6 @@ def load_model(experiment):
             topK_treshold=CONFIG.tk_treshold,
             binarize=not CONFIG.no_binarize,
             epsilon=CONFIG.epsilon,
-            use_bernoulli=CONFIG.use_bernoulli,
         )
 
     if experiment == "random_maps":
@@ -21,6 +20,7 @@ def load_model(experiment):
             mask_ratio=CONFIG.mask_ratio,
             shaping_module=shaping_module,
             random_shape_layers=CONFIG.layers,
+            use_bernoulli=CONFIG.use_bernoulli,
         )
 
     if experiment == "domain_adapt":
