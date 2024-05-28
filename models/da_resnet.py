@@ -18,7 +18,7 @@ class DAResNet18(nn.Module):
         self.shaping_module = shaping_module
         self.adapt_layers = adapt_layers
 
-        self.visualize = False
+        self.visualize_mode = False
         self.to_visualize = []
 
     def forward(self, x):
@@ -26,7 +26,7 @@ class DAResNet18(nn.Module):
 
     def visualize(self):
         self.eval()
-        self.visualize = True
+        self.visualize_mode = True
 
     def store_activation_maps(self, targ_x):
         with torch.autocast(
