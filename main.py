@@ -9,6 +9,7 @@ import logging
 import warnings
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 from parse_args import parse_arguments
 
 from dataset import PACS
@@ -121,6 +122,60 @@ def train(model, data):
         save_checkpoint(epoch, model, scheduler, optimizer)
 
 
+def visualize_activations(activations):
+    num_visualizations = len(activations)
+
+    fig, axes = plt.subplots(
+        num_visualizations, 3, figsize=(15, 5 * num_visualizations)
+    )
+
+    if num_visualizations == 1:
+        axes = [axes]
+
+    for idx, activation in enumerate(activations):
+        source = activation["source"].cpu().numpy()
+        mask = activation["target"].cpu().numpy()
+        shaped = activation["res"].cpu().numpy()
+
+        print("Source shape: ", source.shape)
+        print("Target shape: ", mask.shape)
+        print("Res shape: ", shaped.shape)
+
+        source = (source - np.min(source)) / (np.max(source) - np.min(source))
+        mask = (mask - np.min(mask)) / (np.max(mask) - np.min(mask))
+        shaped = (shaped - np.min(shaped)) / (np.max(shaped) - np.min(shaped))
+
+        axes[idx][0].imshow(np.transpose(source[0], (1, 2, 0)), cmap="viridis")
+        axes[idx][0].set_title("Source Activation")
+        axes[idx][0].axis("off")
+
+        axes[idx][1].imshow(np.transpose(mask[0], (1, 2, 0)), cmap="viridis")
+        axes[idx][1].set_title("Target")
+        axes[idx][1].axis("off")
+
+        axes[idx][2].imshow(np.transpose(shaped[0], (1, 2, 0)), cmap="viridis")
+        axes[idx][2].set_title("Shaped Activation")
+        axes[idx][2].axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
+
+def visualize(model, batches):
+    model.visualize()
+    for batch in batches:
+        sx, sy, tx = batch
+        model.store_activation_maps(tx)
+        model.register_shaping_hooks()
+        model(sx)
+        model.remove_shaping_hooks
+        for idx, a in enumerate(model.to_visualize):
+            np.save(f"source_{idx}", a["source"])
+            np.save(f"target_{idx}", a["target"])
+            np.save(f"res_{idx}", a["res"])
+        visualize_activations(model.to_visualize)
+
+
 def main():
     # Load dataset
     data = PACS.load_data()
@@ -130,6 +185,7 @@ def main():
 
     if not CONFIG.test_only:
         train(model, data)
+        visualize(model, data["test"][0:3])
     else:
         evaluate(model, data["test"])
 
