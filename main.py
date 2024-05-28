@@ -137,33 +137,60 @@ def visualize_activations(activations):
         mask = activation["target"].cpu().numpy()
         shaped = activation["res"].cpu().numpy()
 
-        print("Source shape: ", source.shape)
-        print("Target shape: ", mask.shape)
-        print("Res shape: ", shaped.shape)
+        print("Batched source shape: ", source.shape)
+        print("Batched target shape: ", mask.shape)
+        print("Batched res shape: ", shaped.shape)
 
+        # Assuming the format [batch_size, channels, height, width]
+        # We select the first element in the batch for visualization
+        source = source[0]
+        mask = mask[0]
+        shaped = shaped[0]
+
+        print("source shape: ", source.shape)
+        print("target shape: ", mask.shape)
+        print("res shape: ", shaped.shape)
+
+        # Normalizing to [0, 1] for visualization
         source = (source - np.min(source)) / (np.max(source) - np.min(source))
         mask = (mask - np.min(mask)) / (np.max(mask) - np.min(mask))
         shaped = (shaped - np.min(shaped)) / (np.max(shaped) - np.min(shaped))
 
-        axes[idx][0].imshow(np.transpose(source[0], (1, 2, 0)), cmap="viridis")
+        # Handling single channel or multiple channels
+        if source.shape[0] == 1:  # Single channel
+            source = source[0]
+            mask = mask[0]
+            shaped = shaped[0]
+            axes[idx][0].imshow(source, cmap="viridis")
+            axes[idx][1].imshow(mask, cmap="viridis")
+            axes[idx][2].imshow(shaped, cmap="viridis")
+        else:  # Multiple channels, selecting the first channel
+            source = np.transpose(source, (1, 2, 0))
+            mask = np.transpose(mask, (1, 2, 0))
+            shaped = np.transpose(shaped, (1, 2, 0))
+            axes[idx][0].imshow(source[:, :, 0], cmap="viridis")
+            axes[idx][1].imshow(mask[:, :, 0], cmap="viridis")
+            axes[idx][2].imshow(shaped[:, :, 0], cmap="viridis")
+
         axes[idx][0].set_title("Source Activation")
         axes[idx][0].axis("off")
 
-        axes[idx][1].imshow(np.transpose(mask[0], (1, 2, 0)), cmap="viridis")
         axes[idx][1].set_title("Target")
         axes[idx][1].axis("off")
 
-        axes[idx][2].imshow(np.transpose(shaped[0], (1, 2, 0)), cmap="viridis")
         axes[idx][2].set_title("Shaped Activation")
         axes[idx][2].axis("off")
 
     plt.tight_layout()
     plt.show()
 
-
-def visualize(model, batches):
+def visualize(model, batches, num_batches):
     model.visualize()
+    count = 0
     for batch in batches:
+        if count > num_batches:
+          return
+        count +=1
         sx, sy, tx = batch
         model.store_activation_maps(tx)
         model.register_shaping_hooks()
@@ -185,7 +212,7 @@ def main():
 
     if not CONFIG.test_only:
         train(model, data)
-        visualize(model, data["test"][0:3])
+        visualize(model, data["test"], 3)
     else:
         evaluate(model, data["test"])
 
