@@ -1,3 +1,5 @@
+from matplotlib import texmanager
+from numpy.lib import savetxt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -133,10 +135,9 @@ def visualize_activations(activations):
         axes = [axes]
 
     for idx, activation in enumerate(activations):
-        source = activation["source"].cpu().numpy()
-        mask = activation["target"].cpu().numpy()
-        shaped = activation["res"].cpu().numpy()
-
+        source = activation["source"]
+        mask = activation["target"]
+        shaped = activation["res"]
         print("Batched source shape: ", source.shape)
         print("Batched target shape: ", mask.shape)
         print("Batched res shape: ", shaped.shape)
@@ -187,20 +188,38 @@ def visualize_activations(activations):
 def visualize(model, batches, num_batches):
     model.visualize()
     count = 0
+    
     for batch in batches:
-        if count > num_batches:
-          return
-        count +=1
-        sx, sy, tx = batch
-        model.store_activation_maps(tx)
-        model.register_shaping_hooks()
-        model(sx)
-        model.remove_shaping_hooks
-        for idx, a in enumerate(model.to_visualize):
-            np.save(f"source_{idx}", a["source"])
-            np.save(f"target_{idx}", a["target"])
-            np.save(f"res_{idx}", a["res"])
-        visualize_activations(model.to_visualize)
+      
+      if count > num_batches:
+        return
+      count +=1
+
+      sx, sy = unpack_batch_to_device(batch)
+      tx = batch[2]
+      
+      sy = sy.to(dtype=torch.float16).to(CONFIG.device)
+      tx = tx.to(dtype=torch.float16).to(CONFIG.device)
+      sx = sx.to(dtype=torch.float16).to(CONFIG.device)
+
+      print(sx)
+      print(tx)
+
+      print(sx.dtype)
+      print(tx.dtype)
+
+      model.store_activation_maps(tx)
+      model.register_shaping_hooks()
+      with torch.no_grad():
+        with torch.autocast(device_type=CONFIG.device, dtype=torch.float16):
+          model(sx)
+      model.remove_shaping_hooks
+      print("SAVING MAPS")
+      for idx, a in enumerate(model.to_visualize):
+          np.save(f"visualize/source_{idx}", a["source"])
+          np.save(f"visualize/target_{idx}", a["target"])
+          np.save(f"visualize/res_{idx}", a["res"])
+      visualize_activations(model.to_visualize)
 
 
 def main():
@@ -212,7 +231,7 @@ def main():
 
     if not CONFIG.test_only:
         train(model, data)
-        visualize(model, data["test"], 3)
+        visualize(model, data["train"], 3)
     else:
         evaluate(model, data["test"])
 
