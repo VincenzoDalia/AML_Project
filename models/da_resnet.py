@@ -16,11 +16,17 @@ class DAResNet18(nn.Module):
         self.activation_maps = []
 
         self.shaping_module = shaping_module
-
         self.adapt_layers = adapt_layers
+
+        self.visualize = False
+        self.to_visualize = []
 
     def forward(self, x):
         return self.resnet(x)
+
+    def visualize(self):
+        self.eval()
+        self.visualize = True
 
     def store_activation_maps(self, targ_x):
         with torch.autocast(
@@ -49,7 +55,18 @@ class DAResNet18(nn.Module):
     # To do the activation shaping
     def adapt_activation(self, model, input, output):
         M = self.activation_maps.pop(0)
-        return self.shaping_module.shape_activation(output, M)
+        res = self.shaping_module.shape_activation(output, M)
+
+        if self.visualize:
+            self.to_visualize.append(
+                {
+                    "source": output.clone().detach(),
+                    "target": M.clone().detach(),
+                    "res": res.clone().detach(),
+                }
+            )
+
+        return res
 
     def register_shaping_hooks(self):
         for name, module in self.resnet.named_modules():
