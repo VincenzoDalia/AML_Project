@@ -43,7 +43,7 @@ class RASResNet18(nn.Module):
         num_elements = output.numel()
         num_zeros = int(num_elements * (1 - self.mask_ratio))
 
-        M = torch.rand(output.shape, device=output.device)
+        M = torch.rand(num_elements, device=output.device)
 
         # Create a binary tensor with the appropriate number of ones
         random_indices = torch.randperm(num_elements)[:num_zeros]
