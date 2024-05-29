@@ -62,44 +62,88 @@ Politecnico di Torino\\
 \maketitle
 
 %%%%%%%%% ABSTRACT
-\begin{abstract} Unsupervised domain adaptation (UDA) aims to improve the performances of models trained on a labeled source domain on unseen target domains, a task made difficult by differences in data distributions. One of the main approaches to UDA is to align source and target distributions in the feature space at training time. In this paper, we follow this approach and explore two main hypothesis: content-specific paths exist within a network, and discarding style-specific paths it's possible by performing simple Activation Shaping (ASH). ASH is the process of modifying activation maps from a layer within an architecture using either user-defined or learned rules. This strategy has been proven successfull for Out-of-distribution detection in [1], from which we took the inspiration for our domain adaptation setting. Our approach involves two main strategies: using random activation masks (RA) to disrupt style-specific information, and domain adaptation shaping (DA), that consists in aligning source and target activations by performing binarization and simple element-wise multiplication. Additionally, we usedused regularization techniques such as top-K activation retention and epsilon smoothing to improve robustness and gradient flow. We conduct extensive experiments on the PACS dataset, focusing on Art Painting as the source domain and Cartoon, Sketch, and Photo as target domains. Our results demonstrate that simple activation shaping, in particular DA, improves the performances with the best overall results reaching an average improvement of up to 7\% in challenging domain shifts. These findings suggest that selectively operating on activation maps can effectively improve the learning of content-specific information, leading the way for the investigation of ASH for domain adaptation. Further exploration can be done on learning masking rules instead of defining them, simply choosing other static rules or dynamic and adaptive onces. We furthermore suggest to test this approach hybridizing it into more sophisticated architectures already in place for domain adaptation.
-
+\begin{abstract} Unsupervised domain adaptation (UDA) aims to improve the performances of models trained on a labeled source domain on unseen target domains, a task made difficult by differences in data distributions. One of the main approaches to UDA is to align source and target distributions in the feature space at training time. In this paper, we follow this approach and explore two main hypothesis: content-specific paths exist within a network, and discarding style-specific paths it's possible by performing simple Activation Shaping (ASH). ASH is the process of modifying activation maps from a layer within an architecture using either user-defined or learned rules. We conduct extensive experiments on the PACS dataset~\cite{Li}, using the Art paintings as source and the others as targets. Our results demonstrate that simple activation shaping can improve performances with the best overall results reaching an average improvement of up to 7\% (w.r.t to an unmodified baseline) in challenging domain shifts. These findings suggest that selectively operating on activation maps can effectively improve the learning of content-specific information, leading the way for the investigation of ASH for domain adaptation. Further exploration can be done on learning masking rules instead of defining them, selecting other static rules or dynamic and adaptive ones. We furthermore suggest to test this approach by injecting it into more sophisticated architectures already in place for domain adaptation. Implementation can be found at: \url{https://github.com/VincenzoDalia/AML_Project}.
 \end{abstract}
 
+
+
+%-------------------------------------------------------------------------
+
+
 %%%%%%%%% BODY TEXT
-\section{Introduction}
-\label{sec:intro}
+\section{Introduction}\label{sec:intro} A significant limitation of neural networks is their inability to perform well with any distribution met at test time. This is often referred to as the "Domain Shift" problem: training and test data often show significant differences resulting in a models with poor generalization capabilities. How can we train a model that is capable of generalizing to one or more domains that shifts from the training one? This challenge can be formalized with the UDA setting. UDA tackles the challenge of transferring knowledge from a labeled source domain to an unlabeled target domain, effectively addressing the domain shift problem. Moreover, UDA is crucial in scenarios where obtaining labeled data or fine-tuning for the target domain is impractical or costly. Several state-of-the-art methods have been developed to address UDA, primarily falling into three main categories: adversarial learning, aligning feature spaces, and implicit representation learning~\cite{Liu},~\cite{Zhang}. 
+\begin{figure}[t]
+  \centering
+   \includegraphics[width=1\linewidth]{pacs-uda.png}
+   \caption{Unsupervised domain adpatation setting on the PACS dataset}
+   \label{fig:1}
+\end{figure}
+Adversarial domain adaptation methods leverage adversarial training to minimize the discrepancy between source and target domains by introducing a domain classifier that helps the model learn domain-invariant features. This approach employs a gradient reversal layer to ensure that the features learned by the model are indistinguishable between the source and target domains, effectively reducing the domain gap~\cite{Ganin}. Aligning feature space techniques, like Deep CORAL\cite{Sun} and MMD-based approaches\cite{Long},~\cite{Zhu}, seek to directly align the distributions of the feature representations from both domains. Deep CORAL works by aligning the second-order statistics (covariances) of the source and target features, while MMD-based methods measure and minimize the discrepancy between the distributions of the source and target features in kernel spaces. Learning implicit representations involves using self-supervised tasks tasks, such as solving jigsaw puzzles, predicting image rotations, or reconstruction tasks, to encourage the model to learn meaningful and invariant representations without requiring labeled data from the target domain~\cite{Xu}. These tasks are designed to capture the intrinsic properties of the data, enabling the model to generalize well to new, unseen domains. 
+
+
+\subsection{Do content-specific paths exist?}
+Our work falls into the feature space alignment category and focuses on building a simple and effective method based on the process of modifying activation maps from a layer within an architecture using user-defined rules (ASH). This strategy has been proven successful for Out-of-distribution detection (OOD) in~\cite{Djurisic}, which demonstrated the efficacy of simple activation modifications for identifying outliers and from which we took inspiration for our domain adaptation setting. Our research explores two main questions: do content-specific paths exist within neural networks?, are we able to find them with ease? We hypothesize that simple ASH can effectively isolate content-specific features within a network with very small computational and train overhead. Our approach involves two main strategies: using random activation masks (RA) to disrupt style-specific information, and domain adaptation shaping (DA), that consists in aligning source and target activations by performing binarization and simple element-wise multiplication. Additionally, we use regularization techniques such as top-K activation retention and epsilon smoothing to improve robustness and gradient flow.
 
 %-------------------------------------------------------------------------
-\subsection{Unsupervised domain adaptation}
-There are several methods to perform UDA, the 3 most important are ADVERSARIAL DA, Aligning in feature space and learning implicit representations. Briefly introduce SOTA methods on UDA. Note that our approach is aligning in feature space with activation shaping  and user defined rules.
 
-\subsection{Domain Adaptation is Hard}
-Cite UDA challenges. Cite difficulties of more sophisticated methods: train is more complex/hard, it requires more computational power and so on. Note that we design a simple method to achieve good results with less struggle.
 
-\subsection{Do Content-Specific Paths Exist?}
-Expand on the main research question.
+
+
 %-------------------------------------------------------------------------
 
 
-%------------------------------------------------------------------------
 \section{Related Work}
-2 related works that help showing how hard it is to perform UDA (possibly with not so great results..)
-Extremely simple OOD via activation shaping (We have a strong referenceon this, this inspired our work. Paper name: Extremely Simple Activation Shaping for Out-of-Distribution Detection. Authors: Andrija Djurisic, Nebojsa Bozanic, Arjun Ashok, Rosanne Liu)
-
+OOD and why we tought to use ASH
 \label{sec:formatting}
 
-%------------------------------------------------------------------------
+
+
+
+%-------------------------------------------------------------------------
+
+
 \section{Method}
-Explain the method
+The following is a detailed description of our method:
+
+\subsection{Dataset}
+
+Describe the dataset and the scenarios.
+
 \subsection{Activation shaping module}
 Custom module implementation and figures, base model.
-\subsection{Dataset}
-Describe the dataset and the scenarios.
+\begin{figure}[t]
+  \centering
+   \includegraphics[width=1\linewidth]{ash_module.png}
+   \caption{Activation shaping module}
+   \label{fig:2}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+   \includegraphics[width=1\linewidth]{asm_impl.png}
+   \caption{Module implementation}
+   \label{fig:3}
+\end{figure}
+
 \subsection{Random Maps}
+
+
 \subsection{Domain adaptation with alignment}
-\subsection{Regularizations}
+
+
+\subsection{Binarization Ablations}
 0.1 instead of 0, topK, nobinarize
+\begin{figure}[t]
+  \centering
+   \includegraphics[width=1\linewidth]{ext2.png}
+   \caption{Activation shaping module}
+   \label{fig:3}
+\end{figure}
+
+
+
+
+%-------------------------------------------------------------------------
 
 
 \section{Experiments}
@@ -112,11 +156,22 @@ Report random maps experiments tables and highlight findings.
 \subsection{Domain adaptation}
 Report DA experiments tables and highlight findings.
 
+
+
+%-------------------------------------------------------------------------
+
+
 \section{Conclusions}
 - Simple activation shaping can be effective depending on the style distances of the domains (more is better).\\
 - Why layers that improves actually improves to us
 \\
 - Further work (use this with other methods, alternative shaping criteria, both user defined learned or adaptive)
+
+
+
+
+
+%-------------------------------------------------------------------------
 
 
 \section{USE THIS AS LATEX SNIPPETS REFERENCES}
@@ -416,5 +471,6 @@ Hence avoid relying only on color as the discriminative feature in plots (such a
 \bibliographystyle{ieee_fullname}
 \bibliography{egbib}
 }
+
 
 \end{document}
