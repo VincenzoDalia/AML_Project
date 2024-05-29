@@ -7,12 +7,12 @@ class ActivationShapingModule:
         self.binarize = binarize
         self.topK_treshold = topK_treshold
         self.epsilon = epsilon
-    
+
     def binarize_matrix(self, m):
         result = torch.ones_like(m) * self.epsilon
         result[m > 0] = 1.0
         return result
-    
+
     def topK_shape(self, A, M, t):
         M_binary = self.binarize_matrix(M)
 
@@ -39,13 +39,9 @@ class ActivationShapingModule:
 
         M: the matrix with which to perform the shaping.
 
-        topK: if True keep only the topK elements of the activation map
-        binarize: if True binarize both the activation map and M
-
         Returns:
         The result of A * M
         """
-
         if self.topK:
             return self.topK_shape(activation_map, M, self.topK_treshold)
 
