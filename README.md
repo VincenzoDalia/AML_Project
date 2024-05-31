@@ -32,7 +32,7 @@ In the following, you can find a brief description of the relevant command line 
 | `--topK` | if set, topK shaping of activation map is performed (for both experiments) |
 | `--tk_treshold` | if set, and the topK flag is set, this controls the K in the topK shaping of activation maps |
 | `--no_binarize` | if set, the activation shaping module will not binarize the masks |
-| `--mask_ratio` | it controls the number (%) of zeros in the random masks (random_maps experiment only), defaults to 0 |
+| `--mask_ratio` | it controls the number (%) of ones in the random masks (random_maps experiment only), defaults to 1 |
 | `--use_bernoulli` | if the experiment is random_maps, it sets the number of 1s drawing from a mask_ratio bernoulli dist. This will make random_maps faster to run, but results may be different from setting exact number of 0s and 1s. Furthermore, this does not create a truly random maps, but a random tensor composed of just 0s and 1s |
 
 
