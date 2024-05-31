@@ -49,7 +49,7 @@ def parse_arguments():
     parser.add_argument(
         "--mask_ratio",
         type=float,
-        default=1,
+        default=0,
         help="If the experiment is random_maps, this controls the ratio of 1s in the random mask",
     )
     parser.add_argument(

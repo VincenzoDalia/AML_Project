@@ -45,7 +45,7 @@ class RASResNet18(nn.Module):
 
         M = torch.rand(num_elements, device=output.device)
 
-        # Create a binary tensor with the appropriate number of ones
+        # Create a binary tensor with the appropriate number of zeros
         random_indices = torch.randperm(num_elements)[:num_zeros]
         M[random_indices] = 0
 
