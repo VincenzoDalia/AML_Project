@@ -21,7 +21,7 @@ class ActivationShapingModule:
 
         return A_topK
 
-    def topK_shape_or(self, A, M, t):
+    def topK_shape(self, A, M, t):
         if self.binarize:
           M = self.binarize_matrix(M)
 
