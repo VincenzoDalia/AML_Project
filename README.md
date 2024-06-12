@@ -2,6 +2,8 @@
 "Activation Shaping for Domain Adaptation" - Vincenzo Dalia, Mario Todaro, Fabio Barbieri
 
 ## Base Code Structure
+PLEASE NOTE THAT PROJECT STRUCTURE HAS (slightly) CHANGED FROM THE ORIGINAL
+
 In the following, you can find a brief description of the included files.
 
 | File | Description | Code to Implement |
