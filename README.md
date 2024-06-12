@@ -59,4 +59,4 @@ In the following, you can find a brief description of the relevant command line 
 ## Random shaping most improving experiments
 |          | Art Painting &#8594; Cartoon | Art Painting &#8594; Sketch | Art Painting &#8594; Photo | Average |
 | :------: | :--------------------------: | :-------------------------: | :------------------------: | :-----: |
-| 2.1.2 |            ...             |             ...           |            ...           |  ...  |
+| 2.1.2 |            59,34             |             52,46           |            95,33           |  69,04  |
