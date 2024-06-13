@@ -6,8 +6,8 @@ PLEASE NOTE THAT PROJECT STRUCTURE HAS (slightly) CHANGED FROM THE ORIGINAL
 
 In the following, you can find a brief description of the included files.
 
-| File | Description | Code to Implement |
-| ---- | ----------- | ----------------- |
+| File | Description | 
+| ---- | ----------- |
 |[...]|
 | `models/resnet.py` | contains the resnet18 baseline |
 | `models/as_module.py` | contains the custom Activation Shaping Module |
@@ -17,6 +17,7 @@ In the following, you can find a brief description of the included files.
 ## Running The Experiments
 To run the experiments you can use, the provided launch scripts. Example usage:
 ```
+# Eventually give script permissions first, then
 ./launch_scripts/baseline.sh cartoon
 ./launch_scripts/random_maps.sh sketch --mask_ratio 0.9
 ./launch_scripts/domain_adapt.sh photo --layers 3.1.2 4.1.bn2 --topK --tk_treshold 0.5 --no_binarize
@@ -59,4 +60,4 @@ In the following, you can find a brief description of the relevant command line 
 ## Random shaping most improving experiments
 |          | Art Painting &#8594; Cartoon | Art Painting &#8594; Sketch | Art Painting &#8594; Photo | Average |
 | :------: | :--------------------------: | :-------------------------: | :------------------------: | :-----: |
-| 2.1.2 |            59,34             |             52,46           |            95,33           |  69,04  |
+| 2.1.2, mask_ratio = 0.9|            59,34             |             52,46           |            95,33           |  69,04  |
